@@ -3,14 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>N4 Kanji — Flashcard</title>
+<title>N4 Kanji — Flashcard per Level</title>
 <style>
 :root{
   --bg:#f4f5f7; --surface:#ffffff; --surface2:#eceef2;
   --text:#1a1d23; --muted:#6b7280;
   --accent:#4f46e5; --accent-soft:#eef0ff;
   --green:#16a34a; --green-soft:#e9f7ef;
-  --orange:#ea7c28;
+  --blue:#2563eb; --blue-soft:#e8f0fe;
+  --orange:#ea7c28; --orange-soft:#fdf0e4;
+  --red:#dc2626; --red-soft:#fdeaea;
   --radius:16px;
   --shadow:0 1px 3px rgba(16,24,40,.06),0 4px 16px rgba(16,24,40,.06);
 }
@@ -26,6 +28,19 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--surface2);padding:5px;border-radius:12px;margin-top:8px}
 .seg button{border:0;background:transparent;padding:9px 8px;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit}
 .seg button.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+/* level chips */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 2px 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:0;background:var(--surface);box-shadow:var(--shadow);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-flex;gap:7px;align-items:center}
+.chip .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.chip .cnt{font-weight:600;font-size:12px;opacity:.55}
+.chip.active{background:var(--text);color:#fff}
+.lvl-desc{font-size:12.5px;color:var(--muted);margin-top:8px;padding:0 2px;line-height:1.5}
+/* level colors */
+.lv-easy{background:var(--green-soft);color:var(--green)}
+.lv-intermediate{background:var(--blue-soft);color:var(--blue)}
+.lv-medium{background:var(--orange-soft);color:var(--orange)}
+.lv-hard{background:var(--red-soft);color:var(--red)}
 .row{display:flex;align-items:center;gap:10px}
 .between{justify-content:space-between}
 .mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
@@ -68,13 +83,14 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
 .item .info{flex:1;min-width:0}
 .item .info b{display:block;font-size:14px}
 .item .info span{font-size:13px;color:var(--muted)}
+.item .tags{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
 .tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--surface2);color:var(--muted);white-space:nowrap}
 .tag.green{background:var(--green-soft);color:var(--green)}
 .item .ex{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--surface2);font-size:14px;line-height:1.7}
 .item.open .ex{display:block}
 .item .ex .id{color:var(--muted);font-size:13px}
 .empty{text-align:center;color:var(--muted);padding:32px 0;font-size:14px}
-.footer-note{text-align:center;color:var(--muted);font-size:12px;margin-top:28px}
+.footer-note{text-align:center;color:var(--muted);font-size:12px;margin-top:28px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -89,9 +105,12 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
     <button id="tabList" role="tab">📋 Daftar</button>
   </div>
 
+  <div class="chips" id="levelChips" role="tablist" aria-label="Level kesulitan"></div>
+  <p class="lvl-desc" id="levelDesc"></p>
+
   <!-- ====== KARTU ====== -->
   <section id="panelCard">
-    <div class="row between mt16">
+    <div class="row between mt12">
       <span class="small muted" id="cardCounter">Kartu 1</span>
       <button class="toggle-btn" id="btnShuffle">🔀 Acak: mati</button>
     </div>
@@ -106,7 +125,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
         <div class="face back">
           <div class="reading" id="cardReading"></div>
           <div class="meaning" id="cardMeaning"></div>
-          <span class="lvl">JLPT N4</span>
+          <span class="lvl" id="cardLevel">Easy</span>
           <div class="example" id="cardExample"></div>
           <div class="example-id" id="cardExampleId"></div>
         </div>
@@ -129,161 +148,179 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
 
   <!-- ====== DAFTAR ====== -->
   <section id="panelList" hidden>
-    <p class="small muted mt16">Ketuk baris untuk melihat contoh kalimat. Tanda ✓ hafal tersimpan otomatis di perangkatmu.</p>
+    <p class="small muted mt12">Ketuk baris untuk melihat contoh kalimat. Tanda ✓ hafal tersimpan otomatis di perangkatmu.</p>
     <input type="search" class="search mt12" id="kanjiSearch" placeholder="Cari kanji / reading / arti…" aria-label="Cari kanji">
     <div class="list mt12" id="kanjiList"></div>
   </section>
 
-  <div class="footer-note">140 kata kanji JLPT N4 · progres tersimpan di perangkat ini</div>
+  <div class="footer-note">140 kata kanji JLPT N4 · dibagi 4 level berdasarkan frekuensi pemakaian di kehidupan nyata · progres tersimpan di perangkat ini</div>
 </div>
 
 <script>
+/* Data diurutkan dari yang paling sering muncul (easy) ke yang paling jarang (hard) */
 const KANJI = [
-  {id:'n1', k:'会議', r:'かいぎ', m:'rapat', ex:'午後から会議があります。', exi:'Ada rapat mulai siang.', lv:'N4', dif:'easy'},
-  {id:'n2', k:'経験', r:'けいけん', m:'pengalaman', ex:'日本で働いた経験があります。', exi:'Punya pengalaman bekerja di Jepang.', lv:'N4', dif:'medium'},
-  {id:'n3', k:'計画', r:'けいかく', m:'rencana', ex:'夏休みの計画を立てました。', exi:'Menyusun rencana liburan musim panas.', lv:'N4', dif:'easy'},
-  {id:'n4', k:'旅行', r:'りょこう', m:'perjalanan', ex:'京都へ旅行に行きました。', exi:'Pergi jalan-jalan ke Kyoto.', lv:'N4', dif:'easy'},
-  {id:'n5', k:'趣味', r:'しゅみ', m:'hobi', ex:'趣味は写真を撮ることです。', exi:'Hobiku memotret.', lv:'N4', dif:'easy'},
-  {id:'n6', k:'運動', r:'うんどう', m:'olahraga', ex:'毎朝運動しています。', exi:'Berolahraga setiap pagi.', lv:'N4', dif:'easy'},
+  /* ===== EASY — paling sering muncul sehari-hari ===== */
   {id:'n7', k:'予定', r:'よてい', m:'rencana, jadwal', ex:'明日の予定を教えてください。', exi:'Tolong beri tahu jadwal besok.', lv:'N4', dif:'easy'},
   {id:'n8', k:'約束', r:'やくそく', m:'janji', ex:'友達と約束があります。', exi:'Ada janji dengan teman.', lv:'N4', dif:'easy'},
   {id:'n9', k:'連絡', r:'れんらく', m:'kabar, kontak', ex:'あとで連絡します。', exi:'Nanti saya hubungi.', lv:'N4', dif:'easy'},
-  {id:'n10', k:'相談', r:'そうだん', m:'konsultasi', ex:'先生に相談しました。', exi:'Berkonsultasi dengan guru.', lv:'N4', dif:'medium'},
-  {id:'n11', k:'説明', r:'せつめい', m:'penjelasan', ex:'説明をよく聞いてください。', exi:'Dengarkan penjelasannya baik-baik.', lv:'N4', dif:'easy'},
-  {id:'n12', k:'報告', r:'ほうこく', m:'laporan', ex:'結果を報告しました。', exi:'Melaporkan hasilnya.', lv:'N4', dif:'medium'},
-  {id:'n13', k:'意見', r:'いけん', m:'pendapat', ex:'みんなの意見を聞きたい。', exi:'Ingin mendengar pendapat semua orang.', lv:'N4', dif:'medium'},
-  {id:'n14', k:'関係', r:'かんけい', m:'hubungan', ex:'二人はいい関係です。', exi:'Keduanya berhubungan baik.', lv:'N4', dif:'medium'},
   {id:'n15', k:'家族', r:'かぞく', m:'keluarga', ex:'家族と夕飯を食べます。', exi:'Makan malam bersama keluarga.', lv:'N4', dif:'easy'},
   {id:'n16', k:'会社', r:'かいしゃ', m:'perusahaan', ex:'小さな会社で働いています。', exi:'Bekerja di perusahaan kecil.', lv:'N4', dif:'easy'},
-  {id:'n17', k:'工場', r:'こうじょう', m:'pabrik', ex:'車の工場で働いています。', exi:'Bekerja di pabrik mobil.', lv:'N4', dif:'easy'},
-  {id:'n18', k:'事務所', r:'じむしょ', m:'kantor', ex:'事務所は駅の近くです。', exi:'Kantornya dekat stasiun.', lv:'N4', dif:'medium'},
   {id:'n19', k:'仕事', r:'しごと', m:'pekerjaan', ex:'仕事が終わりました。', exi:'Pekerjaan sudah selesai.', lv:'N4', dif:'easy'},
-  {id:'n20', k:'残業', r:'ざんぎょう', m:'lembur', ex:'今日は残業があります。', exi:'Hari ini ada lembur.', lv:'N4', dif:'medium'},
-  {id:'n21', k:'休暇', r:'きゅうか', m:'liburan, cuti', ex:'休暇を取って帰国しました。', exi:'Mengambil cuti lalu pulang ke negara asal.', lv:'N4', dif:'medium'},
-  {id:'n22', k:'病気', r:'びょうき', m:'penyakit', ex:'病気で学校を休みました。', exi:'Tidak masuk sekolah karena sakit.', lv:'N4', dif:'easy'},
-  {id:'n23', k:'風邪', r:'かぜ', m:'flu', ex:'風邪をひきました。', exi:'Terkena flu.', lv:'N4', dif:'easy'},
-  {id:'n24', k:'頭痛', r:'ずつう', m:'sakit kepala', ex:'頭痛がします。', exi:'Kepalaku sakit.', lv:'N4', dif:'easy'},
-  {id:'n25', k:'怪我', r:'けが', m:'cedera, luka', ex:'転んで怪我をしました。', exi:'Jatuh dan cedera.', lv:'N4', dif:'easy'},
-  {id:'n26', k:'薬', r:'くすり', m:'obat', ex:'この薬を飲んでください。', exi:'Tolong minum obat ini.', lv:'N4', dif:'easy'},
   {id:'n27', k:'病院', r:'びょういん', m:'rumah sakit', ex:'病院へ行きました。', exi:'Pergi ke rumah sakit.', lv:'N4', dif:'easy'},
-  {id:'n28', k:'健康', r:'けんこう', m:'kesehatan', ex:'健康に気をつけています。', exi:'Menjaga kesehatan.', lv:'N4', dif:'medium'},
-  {id:'n29', k:'試験', r:'しけん', m:'ujian', ex:'来週試験があります。', exi:'Minggu depan ada ujian.', lv:'N4', dif:'easy'},
-  {id:'n30', k:'合格', r:'ごうかく', m:'lulus', ex:'試験に合格しました。', exi:'Lulus ujian.', lv:'N4', dif:'medium'},
-  {id:'n31', k:'失敗', r:'しっぱい', m:'kegagalan', ex:'失敗から学びました。', exi:'Belajar dari kegagalan.', lv:'N4', dif:'medium'},
-  {id:'n32', k:'成功', r:'せいこう', m:'kesuksesan', ex:'実験が成功しました。', exi:'Eksperimennya berhasil.', lv:'N4', dif:'medium'},
-  {id:'n33', k:'努力', r:'どりょく', m:'usaha', ex:'毎日努力しています。', exi:'Berusaha setiap hari.', lv:'N4', dif:'medium'},
-  {id:'n34', k:'成績', r:'せいせき', m:'nilai', ex:'成績が上がりました。', exi:'Nilainya naik.', lv:'N4', dif:'medium'},
-  {id:'n35', k:'卒業', r:'そつぎょう', m:'kelulusan', ex:'三月に卒業します。', exi:'Lulus bulan Maret.', lv:'N4', dif:'medium'},
-  {id:'n36', k:'入学', r:'にゅうがく', m:'masuk sekolah', ex:'四月に入学します。', exi:'Masuk sekolah bulan April.', lv:'N4', dif:'medium'},
-  {id:'n37', k:'授業', r:'じゅぎょう', m:'pelajaran di kelas', ex:'授業は九時からです。', exi:'Pelajaran mulai jam sembilan.', lv:'N4', dif:'easy'},
-  {id:'n38', k:'宿題', r:'しゅくだい', m:'PR (pekerjaan rumah)', ex:'宿題を出してください。', exi:'Tolong kumpulkan PR.', lv:'N4', dif:'easy'},
-  {id:'n39', k:'復習', r:'ふくしゅう', m:'mengulang pelajaran', ex:'今日の文法を復習しました。', exi:'Mengulang grammar hari ini.', lv:'N4', dif:'medium'},
-  {id:'n40', k:'予習', r:'よしゅう', m:'belajar persiapan', ex:'明日の授業を予習します。', exi:'Mempelajari materi besok lebih dulu.', lv:'N4', dif:'medium'},
-  {id:'n41', k:'練習', r:'れんしゅう', m:'latihan', ex:'発音を練習します。', exi:'Berlatih pelafalan.', lv:'N4', dif:'easy'},
-  {id:'n42', k:'質問', r:'しつもん', m:'pertanyaan', ex:'質問がある人はいますか。', exi:'Ada yang mau bertanya?', lv:'N4', dif:'easy'},
-  {id:'n43', k:'問題', r:'もんだい', m:'soal, masalah', ex:'この問題は難しいです。', exi:'Soal ini sulit.', lv:'N4', dif:'easy'},
   {id:'n44', k:'答え', r:'こたえ', m:'jawaban', ex:'答えを書いてください。', exi:'Tolong tulis jawabannya.', lv:'N4', dif:'easy'},
   {id:'n45', k:'意味', r:'いみ', m:'arti', ex:'この言葉の意味を調べました。', exi:'Mencari arti kata ini.', lv:'N4', dif:'easy'},
-  {id:'n46', k:'漢字', r:'かんじ', m:'kanji', ex:'漢字を覚えるのが難しいです。', exi:'Menghafal kanji itu sulit.', lv:'N4', dif:'easy'},
-  {id:'n47', k:'文法', r:'ぶんぽう', m:'tata bahasa', ex:'文法の間違いを直しました。', exi:'Memperbaiki kesalahan grammar.', lv:'N4', dif:'easy'},
-  {id:'n48', k:'辞書', r:'じしょ', m:'kamus', ex:'辞書で意味を調べます。', exi:'Mencari arti di kamus.', lv:'N4', dif:'easy'},
-  {id:'n49', k:'教科書', r:'きょうかしょ', m:'buku pelajaran', ex:'教科書を開いてください。', exi:'Silakan buka buku pelajaran.', lv:'N4', dif:'medium'},
-  {id:'n50', k:'発表', r:'はっぴょう', m:'presentasi', ex:'来週発表があります。', exi:'Minggu depan ada presentasi.', lv:'N4', dif:'medium'},
-  {id:'n51', k:'準備', r:'じゅんび', m:'persiapan', ex:'旅行の準備をしています。', exi:'Sedang mempersiapkan perjalanan.', lv:'N4', dif:'medium'},
-  {id:'n52', k:'出張', r:'しっちょう', m:'perjalanan dinas', ex:'大阪へ出張します。', exi:'Dinas ke Osaka.', lv:'N4', dif:'medium'},
-  {id:'n53', k:'案内', r:'あんない', m:'panduan, petunjuk', ex:'駅まで案内します。', exi:'Saya antar sampai stasiun.', lv:'N4', dif:'medium'},
-  {id:'n54', k:'予約', r:'よやく', m:'reservasi', ex:'ホテルを予約しました。', exi:'Memesan hotel.', lv:'N4', dif:'easy'},
-  {id:'n55', k:'注文', r:'ちゅうもん', m:'pesanan', ex:'ラーメンを注文しました。', exi:'Memesan ramen.', lv:'N4', dif:'easy'},
-  {id:'n56', k:'会計', r:'かいけい', m:'tagihan, pembayaran', ex:'会計をお願いします。', exi:'Minta tagihannya.', lv:'N4', dif:'medium'},
-  {id:'n57', k:'割引', r:'わりびき', m:'diskon', ex:'学生は割引があります。', exi:'Pelajar dapat diskon.', lv:'N4', dif:'medium'},
-  {id:'n58', k:'値段', r:'ねだん', m:'harga', ex:'この店は値段が安いです。', exi:'Toko ini harganya murah.', lv:'N4', dif:'easy'},
-  {id:'n59', k:'商品', r:'しょうひん', m:'produk, barang dagangan', ex:'新しい商品が入りました。', exi:'Produk baru sudah masuk.', lv:'N4', dif:'medium'},
-  {id:'n60', k:'店員', r:'てんいん', m:'pramuniaga', ex:'店員さんを呼びました。', exi:'Memanggil pramuniaga.', lv:'N4', dif:'medium'},
-  {id:'n61', k:'客', r:'きゃく', m:'pelanggan, tamu', ex:'店に客が多いです。', exi:'Tokonya ramai pelanggan.', lv:'N4', dif:'easy'},
-  {id:'n62', k:'料金', r:'りょうきん', m:'biaya, tarif', ex:'駐車場の料金を払いました。', exi:'Membayar tarif parkir.', lv:'N4', dif:'medium'},
-  {id:'n63', k:'両替', r:'りょうがえ', m:'penukaran uang', ex:'空港で両替しました。', exi:'Menukar uang di bandara.', lv:'N4', dif:'medium'},
-  {id:'n64', k:'銀行', r:'ぎんこう', m:'bank', ex:'銀行は三時までです。', exi:'Bank buka sampai jam tiga.', lv:'N4', dif:'easy'},
-  {id:'n65', k:'郵便局', r:'ゆうびんきょく', m:'kantor pos', ex:'郵便局で荷物を出しました。', exi:'Mengirim barang di kantor pos.', lv:'N4', dif:'medium'},
-  {id:'n66', k:'切手', r:'きって', m:'prangko', ex:'封筒に切手を貼りました。', exi:'Menempelkan prangko di amplop.', lv:'N4', dif:'easy'},
-  {id:'n67', k:'葉書', r:'はがき', m:'kartu pos', ex:'友達に葉書を送りました。', exi:'Mengirim kartu pos ke teman.', lv:'N4', dif:'easy'},
-  {id:'n68', k:'手紙', r:'てがみ', m:'surat', ex:'母に手紙を書きました。', exi:'Menulis surat untuk ibu.', lv:'N4', dif:'easy'},
-  {id:'n69', k:'荷物', r:'にもつ', m:'barang bawaan', ex:'荷物が重いです。', exi:'Barang bawaannya berat.', lv:'N4', dif:'easy'},
-  {id:'n70', k:'小包', r:'こづつみ', m:'paket kecil', ex:'小包が届きました。', exi:'Paketnya sudah tiba.', lv:'N4', dif:'medium'},
-  {id:'n71', k:'住所', r:'じゅうしょ', m:'alamat', ex:'ここに住所を書いてください。', exi:'Tolong tulis alamat di sini.', lv:'N4', dif:'medium'},
-  {id:'n72', k:'番号', r:'ばんごう', m:'nomor', ex:'電話番号を教えてください。', exi:'Tolong beri tahu nomor teleponnya.', lv:'N4', dif:'easy'},
-  {id:'n73', k:'洗濯', r:'せんたく', m:'cucian', ex:'毎日洗濯をします。', exi:'Mencuci setiap hari.', lv:'N4', dif:'medium'},
-  {id:'n74', k:'掃除', r:'そうじ', m:'bersih-bersih', ex:'部屋を掃除しました。', exi:'Membersihkan kamar.', lv:'N4', dif:'easy'},
   {id:'n75', k:'料理', r:'りょうり', m:'masakan', ex:'母の料理はおいしいです。', exi:'Masakan ibu enak.', lv:'N4', dif:'easy'},
-  {id:'n76', k:'食事', r:'しょくじ', m:'santapan, makan', ex:'家族と食事をしました。', exi:'Makan bersama keluarga.', lv:'N4', dif:'medium'},
+  {id:'n76', k:'食事', r:'しょくじ', m:'santapan, makan', ex:'家族と食事をしました。', exi:'Makan bersama keluarga.', lv:'N4', dif:'easy'},
   {id:'n77', k:'飲み物', r:'のみもの', m:'minuman', ex:'飲み物を買いました。', exi:'Membeli minuman.', lv:'N4', dif:'easy'},
-  {id:'n78', k:'着物', r:'きもの', m:'kimono', ex:'着物を着てみたいです。', exi:'Ingin mencoba memakai kimono.', lv:'N4', dif:'medium'},
-  {id:'n79', k:'眼鏡', r:'めがね', m:'kacamata', ex:'眼鏡をかけています。', exi:'Memakai kacamata.', lv:'N4', dif:'medium'},
-  {id:'n80', k:'傘', r:'かさ', m:'payung', ex:'傘を忘れました。', exi:'Lupa bawa payung.', lv:'N4', dif:'easy'},
-  {id:'n81', k:'鍵', r:'かぎ', m:'kunci', ex:'鍵をなくしました。', exi:'Kehilangan kunci.', lv:'N4', dif:'easy'},
-  {id:'n82', k:'財布', r:'さいふ', m:'dompet', ex:'財布を落としました。', exi:'Dompetnya terjatuh (hilang).', lv:'N4', dif:'medium'},
   {id:'n83', k:'写真', r:'しゃしん', m:'foto', ex:'桜の写真を撮りました。', exi:'Memotret sakura.', lv:'N4', dif:'easy'},
   {id:'n84', k:'映画', r:'えいが', m:'film', ex:'映画を見ました。', exi:'Menonton film.', lv:'N4', dif:'easy'},
   {id:'n85', k:'音楽', r:'おんがく', m:'musik', ex:'音楽を聞くのが好きです。', exi:'Suka mendengarkan musik.', lv:'N4', dif:'easy'},
-  {id:'n86', k:'新聞', r:'しんぶん', m:'koran', ex:'朝、新聞を読みます。', exi:'Membaca koran pagi hari.', lv:'N4', dif:'easy'},
-  {id:'n87', k:'雑誌', r:'ざっし', m:'majalah', ex:'駅で雑誌を買いました。', exi:'Membeli majalah di stasiun.', lv:'N4', dif:'easy'},
-  {id:'n88', k:'小説', r:'しょうせつ', m:'novel', ex:'寝る前に小説を読みます。', exi:'Membaca novel sebelum tidur.', lv:'N4', dif:'medium'},
-  {id:'n89', k:'文化', r:'ぶんか', m:'budaya', ex:'日本の文化を勉強しています。', exi:'Sedang belajar budaya Jepang.', lv:'N4', dif:'medium'},
-  {id:'n90', k:'歴史', r:'れきし', m:'sejarah', ex:'歴史に興味があります。', exi:'Tertarik pada sejarah.', lv:'N4', dif:'medium'},
-  {id:'n91', k:'科学', r:'かがく', m:'sains', ex:'科学の博物館へ行きました。', exi:'Pergi ke museum sains.', lv:'N4', dif:'medium'},
-  {id:'n92', k:'技術', r:'ぎじゅつ', m:'teknologi, teknik', ex:'日本の技術はすごいです。', exi:'Teknologi Jepang hebat.', lv:'N4', dif:'medium'},
-  {id:'n93', k:'経済', r:'けいざい', m:'ekonomi', ex:'経済のニュースを読みました。', exi:'Membaca berita ekonomi.', lv:'N4', dif:'hard'},
-  {id:'n94', k:'国際', r:'こくさい', m:'internasional', ex:'国際会議に参加しました。', exi:'Ikut konferensi internasional.', lv:'N4', dif:'hard'},
-  {id:'n95', k:'社会', r:'しゃかい', m:'masyarakat', ex:'社会問題を考えます。', exi:'Memikirkan masalah sosial.', lv:'N4', dif:'hard'},
-  {id:'n96', k:'政治', r:'せいじ', m:'politik', ex:'政治に関心がありません。', exi:'Tidak tertarik pada politik.', lv:'N4', dif:'hard'},
   {id:'n97', k:'世界', r:'せかい', m:'dunia', ex:'世界を旅行したいです。', exi:'Ingin keliling dunia.', lv:'N4', dif:'easy'},
-  {id:'n98', k:'地球', r:'ちきゅう', m:'bumi', ex:'地球は丸いです。', exi:'Bumi itu bulat.', lv:'N4', dif:'medium'},
-  {id:'n99', k:'自然', r:'しぜん', m:'alam', ex:'自然が好きです。', exi:'Suka alam.', lv:'N4', dif:'medium'},
-  {id:'n100', k:'環境', r:'かんきょう', m:'lingkungan', ex:'環境を守りましょう。', exi:'Mari jaga lingkungan.', lv:'N4', dif:'hard'},
-  {id:'n101', k:'交通', r:'こうつう', m:'transportasi', ex:'交通が便利です。', exi:'Transportasinya praktis.', lv:'N4', dif:'medium'},
-  {id:'n102', k:'運転', r:'うんてん', m:'mengemudi', ex:'車を運転できます。', exi:'Bisa mengemudikan mobil.', lv:'N4', dif:'easy'},
-  {id:'n103', k:'駐車', r:'ちゅうしゃ', m:'parkir', ex:'ここに駐車してください。', exi:'Silakan parkir di sini.', lv:'N4', dif:'medium'},
-  {id:'n104', k:'出発', r:'しゅっぱつ', m:'keberangkatan', ex:'七時に出発します。', exi:'Berangkat jam tujuh.', lv:'N4', dif:'medium'},
-  {id:'n105', k:'到着', r:'とうちゃく', m:'kedatangan', ex:'飛行機が到着しました。', exi:'Pesawatnya sudah tiba.', lv:'N4', dif:'medium'},
-  {id:'n106', k:'事故', r:'じこ', m:'kecelakaan', ex:'交通事故がありました。', exi:'Terjadi kecelakaan lalu lintas.', lv:'N4', dif:'medium'},
-  {id:'n107', k:'危険', r:'きけん', m:'berbahaya', ex:'ここは危険です。', exi:'Di sini berbahaya.', lv:'N4', dif:'medium'},
-  {id:'n108', k:'安全', r:'あんぜん', m:'aman', ex:'安全な場所に行きました。', exi:'Pergi ke tempat yang aman.', lv:'N4', dif:'medium'},
-  {id:'n109', k:'注意', r:'ちゅうい', m:'perhatian, peringatan', ex:'車に注意してください。', exi:'Hati-hati dengan mobil.', lv:'N4', dif:'easy'},
-  {id:'n110', k:'地震', r:'じしん', m:'gempa bumi', ex:'昨夜、地震がありました。', exi:'Tadi malam ada gempa.', lv:'N4', dif:'medium'},
-  {id:'n111', k:'台風', r:'たいふう', m:'topan', ex:'台風が近づいています。', exi:'Topan sedang mendekat.', lv:'N4', dif:'medium'},
-  {id:'n112', k:'火事', r:'かじ', m:'kebakaran', ex:'火事で家が焼けました。', exi:'Rumah terbakar karena kebakaran.', lv:'N4', dif:'medium'},
-  {id:'n113', k:'警察', r:'けいさつ', m:'polisi', ex:'警察に電話しました。', exi:'Menelepon polisi.', lv:'N4', dif:'medium'},
-  {id:'n114', k:'泥棒', r:'どろぼう', m:'pencuri', ex:'泥棒に入られました。', exi:'Kemasukan pencuri.', lv:'N4', dif:'medium'},
-  {id:'n115', k:'法律', r:'ほうりつ', m:'hukum', ex:'新しい法律ができました。', exi:'Ada undang-undang baru.', lv:'N4', dif:'hard'},
-  {id:'n116', k:'規則', r:'きそく', m:'peraturan', ex:'規則を守ってください。', exi:'Tolong patuhi peraturan.', lv:'N4', dif:'medium'},
-  {id:'n117', k:'祭り', r:'まつり', m:'festival', ex:'夏祭りに行きました。', exi:'Pergi ke festival musim panas.', lv:'N4', dif:'medium'},
-  {id:'n118', k:'神社', r:'じんじゃ', m:'kuil Shinto', ex:'神社にお参りしました。', exi:'Bersembahyang ke kuil.', lv:'N4', dif:'medium'},
-  {id:'n119', k:'習慣', r:'しゅうかん', m:'kebiasaan', ex:'日本の習慣を学びました。', exi:'Mempelajari kebiasaan Jepang.', lv:'N4', dif:'medium'},
-  {id:'n120', k:'将来', r:'しょうらい', m:'masa depan', ex:'将来の夢を話しました。', exi:'Menceritakan mimpi masa depan.', lv:'N4', dif:'medium'},
-  {id:'n121', k:'希望', r:'きぼう', m:'harapan', ex:'希望を持っています。', exi:'Punya harapan.', lv:'N4', dif:'medium'},
-  {id:'n122', k:'夢', r:'ゆめ', m:'mimpi', ex:'大きな夢があります。', exi:'Punya mimpi besar.', lv:'N4', dif:'easy'},
   {id:'n123', k:'最近', r:'さいきん', m:'akhir-akhir ini', ex:'最近忙しいです。', exi:'Akhir-akhir ini sibuk.', lv:'N4', dif:'easy'},
   {id:'n124', k:'週末', r:'しゅうまつ', m:'akhir pekan', ex:'週末は家で休みます。', exi:'Akhir pekan istirahat di rumah.', lv:'N4', dif:'easy'},
-  {id:'n125', k:'季節', r:'きせつ', m:'musim', ex:'一番好きな季節は秋です。', exi:'Musim favoritku adalah gugur.', lv:'N4', dif:'easy'},
-  {id:'n126', k:'途中', r:'とちゅう', m:'di tengah jalan', ex:'途中で雨が降りました。', exi:'Di tengah jalan turun hujan.', lv:'N4', dif:'medium'},
+  {id:'n137', k:'空', r:'そら', m:'langit', ex:'空が青いです。', exi:'Langitnya biru.', lv:'N4', dif:'easy'},
+  {id:'n4', k:'旅行', r:'りょこう', m:'perjalanan', ex:'京都へ旅行に行きました。', exi:'Pergi jalan-jalan ke Kyoto.', lv:'N4', dif:'easy'},
+  {id:'n5', k:'趣味', r:'しゅみ', m:'hobi', ex:'趣味は写真を撮ることです。', exi:'Hobiku memotret.', lv:'N4', dif:'easy'},
+  {id:'n6', k:'運動', r:'うんどう', m:'olahraga', ex:'毎朝運動しています。', exi:'Berolahraga setiap pagi.', lv:'N4', dif:'easy'},
+  {id:'n29', k:'試験', r:'しけん', m:'ujian', ex:'来週試験があります。', exi:'Minggu depan ada ujian.', lv:'N4', dif:'easy'},
+  {id:'n41', k:'練習', r:'れんしゅう', m:'latihan', ex:'発音を練習します。', exi:'Berlatih pelafalan.', lv:'N4', dif:'easy'},
+  {id:'n43', k:'問題', r:'もんだい', m:'soal, masalah', ex:'この問題は難しいです。', exi:'Soal ini sulit.', lv:'N4', dif:'easy'},
+  {id:'n42', k:'質問', r:'しつもん', m:'pertanyaan', ex:'質問がある人はいますか。', exi:'Ada yang mau bertanya?', lv:'N4', dif:'easy'},
+  {id:'n54', k:'予約', r:'よやく', m:'reservasi', ex:'ホテルを予約しました。', exi:'Memesan hotel.', lv:'N4', dif:'easy'},
+  {id:'n58', k:'値段', r:'ねだん', m:'harga', ex:'この店は値段が安いです。', exi:'Toko ini harganya murah.', lv:'N4', dif:'easy'},
+  {id:'n64', k:'銀行', r:'ぎんこう', m:'bank', ex:'銀行は三時までです。', exi:'Bank buka sampai jam tiga.', lv:'N4', dif:'easy'},
+  {id:'n69', k:'荷物', r:'にもつ', m:'barang bawaan', ex:'荷物が重いです。', exi:'Barang bawaannya berat.', lv:'N4', dif:'easy'},
+  {id:'n72', k:'番号', r:'ばんごう', m:'nomor', ex:'電話番号を教えてください。', exi:'Tolong beri tahu nomor teleponnya.', lv:'N4', dif:'easy'},
+  {id:'n74', k:'掃除', r:'そうじ', m:'bersih-bersih', ex:'部屋を掃除しました。', exi:'Membersihkan kamar.', lv:'N4', dif:'easy'},
   {id:'n127', k:'入口', r:'いりぐち', m:'pintu masuk', ex:'入口はあちらです。', exi:'Pintu masuk di sebelah sana.', lv:'N4', dif:'easy'},
   {id:'n128', k:'出口', r:'でぐち', m:'pintu keluar', ex:'出口を探しています。', exi:'Sedang mencari pintu keluar.', lv:'N4', dif:'easy'},
-  {id:'n129', k:'階段', r:'かいだん', m:'tangga', ex:'階段を上がってください。', exi:'Silakan naik tangga.', lv:'N4', dif:'easy'},
-  {id:'n130', k:'窓', r:'まど', m:'jendela', ex:'窓を開けました。', exi:'Membuka jendela.', lv:'N4', dif:'easy'},
-  {id:'n131', k:'台所', r:'だいどころ', m:'dapur', ex:'台所で料理をします。', exi:'Memasak di dapur.', lv:'N4', dif:'medium'},
-  {id:'n132', k:'庭', r:'にわ', m:'halaman', ex:'庭に花を植えました。', exi:'Menanam bunga di halaman.', lv:'N4', dif:'easy'},
-  {id:'n133', k:'橋', r:'はし', m:'jembatan', ex:'長い橋を渡りました。', exi:'Menyeberangi jembatan panjang.', lv:'N4', dif:'easy'},
-  {id:'n134', k:'島', r:'しま', m:'pulau', ex:'小さな島に住んでいます。', exi:'Tinggal di pulau kecil.', lv:'N4', dif:'easy'},
-  {id:'n135', k:'港', r:'みなと', m:'pelabuhan', ex:'港に船が着きました。', exi:'Kapal tiba di pelabuhan.', lv:'N4', dif:'medium'},
-  {id:'n136', k:'湖', r:'みずうみ', m:'danau', ex:'湖でボートに乗りました。', exi:'Naik perahu di danau.', lv:'N4', dif:'medium'},
-  {id:'n137', k:'空', r:'そら', m:'langit', ex:'空が青いです。', exi:'Langitnya biru.', lv:'N4', dif:'easy'},
-  {id:'n138', k:'星', r:'ほし', m:'bintang', ex:'星がきれいです。', exi:'Bintangnya indah.', lv:'N4', dif:'easy'},
-  {id:'n139', k:'太陽', r:'たいよう', m:'matahari', ex:'太陽が昇りました。', exi:'Matahari terbit.', lv:'N4', dif:'medium'},
-  {id:'n140', k:'曇り', r:'くもり', m:'mendung', ex:'明日は曇りです。', exi:'Besok mendung.', lv:'N4', dif:'easy'}
+  {id:'n140', k:'曇り', r:'くもり', m:'mendung', ex:'明日は曇りです。', exi:'Besok mendung.', lv:'N4', dif:'easy'},
+
+  /* ===== INTERMEDIATE — sering muncul, terutama di sekolah & kerja ===== */
+  {id:'n11', k:'説明', r:'せつめい', m:'penjelasan', ex:'説明をよく聞いてください。', exi:'Dengarkan penjelasannya baik-baik.', lv:'N4', dif:'intermediate'},
+  {id:'n14', k:'関係', r:'かんけい', m:'hubungan', ex:'二人はいい関係です。', exi:'Keduanya berhubungan baik.', lv:'N4', dif:'intermediate'},
+  {id:'n22', k:'病気', r:'びょうき', m:'penyakit', ex:'病気で学校を休みました。', exi:'Tidak masuk sekolah karena sakit.', lv:'N4', dif:'intermediate'},
+  {id:'n23', k:'風邪', r:'かぜ', m:'flu', ex:'風邪をひきました。', exi:'Terkena flu.', lv:'N4', dif:'intermediate'},
+  {id:'n26', k:'薬', r:'くすり', m:'obat', ex:'この薬を飲んでください。', exi:'Tolong minum obat ini.', lv:'N4', dif:'intermediate'},
+  {id:'n38', k:'宿題', r:'しゅくだい', m:'PR (pekerjaan rumah)', ex:'宿題を出してください。', exi:'Tolong kumpulkan PR.', lv:'N4', dif:'intermediate'},
+  {id:'n46', k:'漢字', r:'かんじ', m:'kanji', ex:'漢字を覚えるのが難しいです。', exi:'Menghafal kanji itu sulit.', lv:'N4', dif:'intermediate'},
+  {id:'n51', k:'準備', r:'じゅんび', m:'persiapan', ex:'旅行の準備をしています。', exi:'Sedang mempersiapkan perjalanan.', lv:'N4', dif:'intermediate'},
+  {id:'n55', k:'注文', r:'ちゅうもん', m:'pesanan', ex:'ラーメンを注文しました。', exi:'Memesan ramen.', lv:'N4', dif:'intermediate'},
+  {id:'n68', k:'手紙', r:'てがみ', m:'surat', ex:'母に手紙を書きました。', exi:'Menulis surat untuk ibu.', lv:'N4', dif:'intermediate'},
+  {id:'n80', k:'傘', r:'かさ', m:'payung', ex:'傘を忘れました。', exi:'Lupa bawa payung.', lv:'N4', dif:'intermediate'},
+  {id:'n81', k:'鍵', r:'かぎ', m:'kunci', ex:'鍵をなくしました。', exi:'Kehilangan kunci.', lv:'N4', dif:'intermediate'},
+  {id:'n82', k:'財布', r:'さいふ', m:'dompet', ex:'財布を落としました。', exi:'Dompetnya terjatuh (hilang).', lv:'N4', dif:'intermediate'},
+  {id:'n86', k:'新聞', r:'しんぶん', m:'koran', ex:'朝、新聞を読みます。', exi:'Membaca koran pagi hari.', lv:'N4', dif:'intermediate'},
+  {id:'n109', k:'注意', r:'ちゅうい', m:'perhatian, peringatan', ex:'車に注意してください。', exi:'Hati-hati dengan mobil.', lv:'N4', dif:'intermediate'},
+  {id:'n122', k:'夢', r:'ゆめ', m:'mimpi', ex:'大きな夢があります。', exi:'Punya mimpi besar.', lv:'N4', dif:'intermediate'},
+  {id:'n129', k:'階段', r:'かいだん', m:'tangga', ex:'階段を上がってください。', exi:'Silakan naik tangga.', lv:'N4', dif:'intermediate'},
+  {id:'n130', k:'窓', r:'まど', m:'jendela', ex:'窓を開けました。', exi:'Membuka jendela.', lv:'N4', dif:'intermediate'},
+  {id:'n138', k:'星', r:'ほし', m:'bintang', ex:'星がきれいです。', exi:'Bintangnya indah.', lv:'N4', dif:'intermediate'},
+  {id:'n1', k:'会議', r:'かいぎ', m:'rapat', ex:'午後から会議があります。', exi:'Ada rapat mulai siang.', lv:'N4', dif:'intermediate'},
+  {id:'n2', k:'経験', r:'けいけん', m:'pengalaman', ex:'日本で働いた経験があります。', exi:'Punya pengalaman bekerja di Jepang.', lv:'N4', dif:'intermediate'},
+  {id:'n3', k:'計画', r:'けいかく', m:'rencana', ex:'夏休みの計画を立てました。', exi:'Menyusun rencana liburan musim panas.', lv:'N4', dif:'intermediate'},
+  {id:'n10', k:'相談', r:'そうだん', m:'konsultasi', ex:'先生に相談しました。', exi:'Berkonsultasi dengan guru.', lv:'N4', dif:'intermediate'},
+  {id:'n13', k:'意見', r:'いけん', m:'pendapat', ex:'みんなの意見を聞きたい。', exi:'Ingin mendengar pendapat semua orang.', lv:'N4', dif:'intermediate'},
+  {id:'n25', k:'怪我', r:'けが', m:'cedera, luka', ex:'転んで怪我をしました。', exi:'Jatuh dan cedera.', lv:'N4', dif:'intermediate'},
+  {id:'n28', k:'健康', r:'けんこう', m:'kesehatan', ex:'健康に気をつけています。', exi:'Menjaga kesehatan.', lv:'N4', dif:'intermediate'},
+  {id:'n31', k:'失敗', r:'しっぱい', m:'kegagalan', ex:'失敗から学びました。', exi:'Belajar dari kegagalan.', lv:'N4', dif:'intermediate'},
+  {id:'n32', k:'成功', r:'せいこう', m:'kesuksesan', ex:'実験が成功しました。', exi:'Eksperimennya berhasil.', lv:'N4', dif:'intermediate'},
+  {id:'n33', k:'努力', r:'どりょく', m:'usaha', ex:'毎日努力しています。', exi:'Berusaha setiap hari.', lv:'N4', dif:'intermediate'},
+  {id:'n37', k:'授業', r:'じゅぎょう', m:'pelajaran di kelas', ex:'授業は九時からです。', exi:'Pelajaran mulai jam sembilan.', lv:'N4', dif:'intermediate'},
+  {id:'n53', k:'案内', r:'あんない', m:'panduan, petunjuk', ex:'駅まで案内します。', exi:'Saya antar sampai stasiun.', lv:'N4', dif:'intermediate'},
+  {id:'n56', k:'会計', r:'かいけい', m:'tagihan, pembayaran', ex:'会計をお願いします。', exi:'Minta tagihannya.', lv:'N4', dif:'intermediate'},
+  {id:'n61', k:'客', r:'きゃく', m:'pelanggan, tamu', ex:'店に客が多いです。', exi:'Tokonya ramai pelanggan.', lv:'N4', dif:'intermediate'},
+  {id:'n73', k:'洗濯', r:'せんたく', m:'cucian', ex:'毎日洗濯をします。', exi:'Mencuci setiap hari.', lv:'N4', dif:'intermediate'},
+  {id:'n104', k:'出発', r:'しゅっぱつ', m:'keberangkatan', ex:'七時に出発します。', exi:'Berangkat jam tujuh.', lv:'N4', dif:'intermediate'},
+
+  /* ===== MEDIUM — cukup sering, muncul di situasi tertentu ===== */
+  {id:'n87', k:'雑誌', r:'ざっし', m:'majalah', ex:'駅で雑誌を買いました。', exi:'Membeli majalah di stasiun.', lv:'N4', dif:'medium'},
+  {id:'n89', k:'文化', r:'ぶんか', m:'budaya', ex:'日本の文化を勉強しています。', exi:'Sedang belajar budaya Jepang.', lv:'N4', dif:'medium'},
+  {id:'n90', k:'歴史', r:'れきし', m:'sejarah', ex:'歴史に興味があります。', exi:'Tertarik pada sejarah.', lv:'N4', dif:'medium'},
+  {id:'n99', k:'自然', r:'しぜん', m:'alam', ex:'自然が好きです。', exi:'Suka alam.', lv:'N4', dif:'medium'},
+  {id:'n102', k:'運転', r:'うんてん', m:'mengemudi', ex:'車を運転できます。', exi:'Bisa mengemudikan mobil.', lv:'N4', dif:'medium'},
+  {id:'n108', k:'安全', r:'あんぜん', m:'aman', ex:'安全な場所に行きました。', exi:'Pergi ke tempat yang aman.', lv:'N4', dif:'medium'},
+  {id:'n110', k:'地震', r:'じしん', m:'gempa bumi', ex:'昨夜、地震がありました。', exi:'Tadi malam ada gempa.', lv:'N4', dif:'medium'},
+  {id:'n111', k:'台風', r:'たいふう', m:'topan', ex:'台風が近づいています。', exi:'Topan sedang mendekat.', lv:'N4', dif:'medium'},
+  {id:'n117', k:'祭り', r:'まつり', m:'festival', ex:'夏祭りに行きました。', exi:'Pergi ke festival musim panas.', lv:'N4', dif:'medium'},
+  {id:'n120', k:'将来', r:'しょうらい', m:'masa depan', ex:'将来の夢を話しました。', exi:'Menceritakan mimpi masa depan.', lv:'N4', dif:'medium'},
+  {id:'n121', k:'希望', r:'きぼう', m:'harapan', ex:'希望を持っています。', exi:'Punya harapan.', lv:'N4', dif:'medium'},
+  {id:'n125', k:'季節', r:'きせつ', m:'musim', ex:'一番好きな季節は秋です。', exi:'Musim favoritku adalah gugur.', lv:'N4', dif:'medium'},
+  {id:'n126', k:'途中', r:'とちゅう', m:'di tengah jalan', ex:'途中で雨が降りました。', exi:'Di tengah jalan turun hujan.', lv:'N4', dif:'medium'},
+  {id:'n132', k:'庭', r:'にわ', m:'halaman', ex:'庭に花を植えました。', exi:'Menanam bunga di halaman.', lv:'N4', dif:'medium'},
+  {id:'n133', k:'橋', r:'はし', m:'jembatan', ex:'長い橋を渡りました。', exi:'Menyeberangi jembatan panjang.', lv:'N4', dif:'medium'},
+  {id:'n134', k:'島', r:'しま', m:'pulau', ex:'小さな島に住んでいます。', exi:'Tinggal di pulau kecil.', lv:'N4', dif:'medium'},
+  {id:'n12', k:'報告', r:'ほうこく', m:'laporan', ex:'結果を報告しました。', exi:'Melaporkan hasilnya.', lv:'N4', dif:'medium'},
+  {id:'n24', k:'頭痛', r:'ずつう', m:'sakit kepala', ex:'頭痛がします。', exi:'Kepalaku sakit.', lv:'N4', dif:'medium'},
+  {id:'n30', k:'合格', r:'ごうかく', m:'lulus', ex:'試験に合格しました。', exi:'Lulus ujian.', lv:'N4', dif:'medium'},
+  {id:'n35', k:'卒業', r:'そつぎょう', m:'kelulusan', ex:'三月に卒業します。', exi:'Lulus bulan Maret.', lv:'N4', dif:'medium'},
+  {id:'n36', k:'入学', r:'にゅうがく', m:'masuk sekolah', ex:'四月に入学します。', exi:'Masuk sekolah bulan April.', lv:'N4', dif:'medium'},
+  {id:'n50', k:'発表', r:'はっぴょう', m:'presentasi', ex:'来週発表があります。', exi:'Minggu depan ada presentasi.', lv:'N4', dif:'medium'},
+  {id:'n57', k:'割引', r:'わりびき', m:'diskon', ex:'学生は割引があります。', exi:'Pelajar dapat diskon.', lv:'N4', dif:'medium'},
+  {id:'n60', k:'店員', r:'てんいん', m:'pramuniaga', ex:'店員さんを呼びました。', exi:'Memanggil pramuniaga.', lv:'N4', dif:'medium'},
+  {id:'n62', k:'料金', r:'りょうきん', m:'biaya, tarif', ex:'駐車場の料金を払いました。', exi:'Membayar tarif parkir.', lv:'N4', dif:'medium'},
+  {id:'n65', k:'郵便局', r:'ゆうびんきょく', m:'kantor pos', ex:'郵便局で荷物を出しました。', exi:'Mengirim barang di kantor pos.', lv:'N4', dif:'medium'},
+  {id:'n71', k:'住所', r:'じゅうしょ', m:'alamat', ex:'ここに住所を書いてください。', exi:'Tolong tulis alamat di sini.', lv:'N4', dif:'medium'},
+  {id:'n79', k:'眼鏡', r:'めがね', m:'kacamata', ex:'眼鏡をかけています。', exi:'Memakai kacamata.', lv:'N4', dif:'medium'},
+  {id:'n101', k:'交通', r:'こうつう', m:'transportasi', ex:'交通が便利です。', exi:'Transportasinya praktis.', lv:'N4', dif:'medium'},
+  {id:'n105', k:'到着', r:'とうちゃく', m:'kedatangan', ex:'飛行機が到着しました。', exi:'Pesawatnya sudah tiba.', lv:'N4', dif:'medium'},
+  {id:'n106', k:'事故', r:'じこ', m:'kecelakaan', ex:'交通事故がありました。', exi:'Terjadi kecelakaan lalu lintas.', lv:'N4', dif:'medium'},
+  {id:'n113', k:'警察', r:'けいさつ', m:'polisi', ex:'警察に電話しました。', exi:'Menelepon polisi.', lv:'N4', dif:'medium'},
+  {id:'n118', k:'神社', r:'じんじゃ', m:'kuil Shinto', ex:'神社にお参りしました。', exi:'Bersembahyang ke kuil.', lv:'N4', dif:'medium'},
+  {id:'n119', k:'習慣', r:'しゅうかん', m:'kebiasaan', ex:'日本の習慣を学びました。', exi:'Mempelajari kebiasaan Jepang.', lv:'N4', dif:'medium'},
+  {id:'n20', k:'残業', r:'ざんぎょう', m:'lembur', ex:'今日は残業があります。', exi:'Hari ini ada lembur.', lv:'N4', dif:'medium'},
+
+  /* ===== HARD — paling jarang muncul dalam percakapan sehari-hari ===== */
+  {id:'n47', k:'文法', r:'ぶんぽう', m:'tata bahasa', ex:'文法の間違いを直しました。', exi:'Memperbaiki kesalahan grammar.', lv:'N4', dif:'hard'},
+  {id:'n48', k:'辞書', r:'じしょ', m:'kamus', ex:'辞書で意味を調べます。', exi:'Mencari arti di kamus.', lv:'N4', dif:'hard'},
+  {id:'n59', k:'商品', r:'しょうひん', m:'produk, barang dagangan', ex:'新しい商品が入りました。', exi:'Produk baru sudah masuk.', lv:'N4', dif:'hard'},
+  {id:'n98', k:'地球', r:'ちきゅう', m:'bumi', ex:'地球は丸いです。', exi:'Bumi itu bulat.', lv:'N4', dif:'hard'},
+  {id:'n103', k:'駐車', r:'ちゅうしゃ', m:'parkir', ex:'ここに駐車してください。', exi:'Silakan parkir di sini.', lv:'N4', dif:'hard'},
+  {id:'n107', k:'危険', r:'きけん', m:'berbahaya', ex:'ここは危険です。', exi:'Di sini berbahaya.', lv:'N4', dif:'hard'},
+  {id:'n112', k:'火事', r:'かじ', m:'kebakaran', ex:'火事で家が焼けました。', exi:'Rumah terbakar karena kebakaran.', lv:'N4', dif:'hard'},
+  {id:'n139', k:'太陽', r:'たいよう', m:'matahari', ex:'太陽が昇りました。', exi:'Matahari terbit.', lv:'N4', dif:'hard'},
+  {id:'n17', k:'工場', r:'こうじょう', m:'pabrik', ex:'車の工場で働いています。', exi:'Bekerja di pabrik mobil.', lv:'N4', dif:'hard'},
+  {id:'n18', k:'事務所', r:'じむしょ', m:'kantor', ex:'事務所は駅の近くです。', exi:'Kantornya dekat stasiun.', lv:'N4', dif:'hard'},
+  {id:'n34', k:'成績', r:'せいせき', m:'nilai', ex:'成績が上がりました。', exi:'Nilainya naik.', lv:'N4', dif:'hard'},
+  {id:'n39', k:'復習', r:'ふくしゅう', m:'mengulang pelajaran', ex:'今日の文法を復習しました。', exi:'Mengulang grammar hari ini.', lv:'N4', dif:'hard'},
+  {id:'n40', k:'予習', r:'よしゅう', m:'belajar persiapan', ex:'明日の授業を予習します。', exi:'Mempelajari materi besok lebih dulu.', lv:'N4', dif:'hard'},
+  {id:'n49', k:'教科書', r:'きょうかしょ', m:'buku pelajaran', ex:'教科書を開いてください。', exi:'Silakan buka buku pelajaran.', lv:'N4', dif:'hard'},
+  {id:'n52', k:'出張', r:'しゅっちょう', m:'perjalanan dinas', ex:'大阪へ出張します。', exi:'Dinas ke Osaka.', lv:'N4', dif:'hard'},
+  {id:'n88', k:'小説', r:'しょうせつ', m:'novel', ex:'寝る前に小説を読みます。', exi:'Membaca novel sebelum tidur.', lv:'N4', dif:'hard'},
+  {id:'n91', k:'科学', r:'かがく', m:'sains', ex:'科学の博物館へ行きました。', exi:'Pergi ke museum sains.', lv:'N4', dif:'hard'},
+  {id:'n92', k:'技術', r:'ぎじゅつ', m:'teknologi, teknik', ex:'日本の技術はすごいです。', exi:'Teknologi Jepang hebat.', lv:'N4', dif:'hard'},
+  {id:'n95', k:'社会', r:'しゃかい', m:'masyarakat', ex:'社会問題を考えます。', exi:'Memikirkan masalah sosial.', lv:'N4', dif:'hard'},
+  {id:'n100', k:'環境', r:'かんきょう', m:'lingkungan', ex:'環境を守りましょう。', exi:'Mari jaga lingkungan.', lv:'N4', dif:'hard'},
+  {id:'n114', k:'泥棒', r:'どろぼう', m:'pencuri', ex:'泥棒に入られました。', exi:'Kemasukan pencuri.', lv:'N4', dif:'hard'},
+  {id:'n116', k:'規則', r:'きそく', m:'peraturan', ex:'規則を守ってください。', exi:'Tolong patuhi peraturan.', lv:'N4', dif:'hard'},
+  {id:'n131', k:'台所', r:'だいどころ', m:'dapur', ex:'台所で料理をします。', exi:'Memasak di dapur.', lv:'N4', dif:'hard'},
+  {id:'n135', k:'港', r:'みなと', m:'pelabuhan', ex:'港に船が着きました。', exi:'Kapal tiba di pelabuhan.', lv:'N4', dif:'hard'},
+  {id:'n21', k:'休暇', r:'きゅうか', m:'liburan, cuti', ex:'休暇を取って帰国しました。', exi:'Mengambil cuti lalu pulang ke negara asal.', lv:'N4', dif:'hard'},
+  {id:'n63', k:'両替', r:'りょうがえ', m:'penukaran uang', ex:'空港で両替しました。', exi:'Menukar uang di bandara.', lv:'N4', dif:'hard'},
+  {id:'n66', k:'切手', r:'きって', m:'prangko', ex:'封筒に切手を貼りました。', exi:'Menempelkan prangko di amplop.', lv:'N4', dif:'hard'},
+  {id:'n67', k:'葉書', r:'はがき', m:'kartu pos', ex:'友達に葉書を送りました。', exi:'Mengirim kartu pos ke teman.', lv:'N4', dif:'hard'},
+  {id:'n70', k:'小包', r:'こづつみ', m:'paket kecil', ex:'小包が届きました。', exi:'Paketnya sudah tiba.', lv:'N4', dif:'hard'},
+  {id:'n78', k:'着物', r:'きもの', m:'kimono', ex:'着物を着てみたいです。', exi:'Ingin mencoba memakai kimono.', lv:'N4', dif:'hard'},
+  {id:'n93', k:'経済', r:'けいざい', m:'ekonomi', ex:'経済のニュースを読みました。', exi:'Membaca berita ekonomi.', lv:'N4', dif:'hard'},
+  {id:'n94', k:'国際', r:'こくさい', m:'internasional', ex:'国際会議に参加しました。', exi:'Ikut konferensi internasional.', lv:'N4', dif:'hard'},
+  {id:'n96', k:'政治', r:'せいじ', m:'politik', ex:'政治に関心がありません。', exi:'Tidak tertarik pada politik.', lv:'N4', dif:'hard'},
+  {id:'n115', k:'法律', r:'ほうりつ', m:'hukum', ex:'新しい法律ができました。', exi:'Ada undang-undang baru.', lv:'N4', dif:'hard'},
+  {id:'n136', k:'湖', r:'みずうみ', m:'danau', ex:'湖でボートに乗りました。', exi:'Naik perahu di danau.', lv:'N4', dif:'hard'}
 ];
 
 /* ================= LOGIC ================= */
 const $ = id => document.getElementById(id);
 const LS_KEY = 'n4kanji_mastered_v1';
+
+const LEVELS = {
+  all:         {label:'Semua',        desc:'Semua kata, diurutkan dari yang paling sering muncul di kehidupan nyata.'},
+  easy:        {label:'Easy',         cls:'lv-easy',         color:'var(--green)',  desc:'Paling sering muncul dalam kehidupan sehari-hari — makanan, keluarga, sekolah, cuaca.'},
+  intermediate:{label:'Intermediate', cls:'lv-intermediate', color:'var(--blue)',   desc:'Sering muncul, terutama di sekolah, kerja, dan aktivitas harian.'},
+  medium:      {label:'Medium',       cls:'lv-medium',       color:'var(--orange)', desc:'Cukup sering, tapi biasanya cuma muncul di situasi tertentu.'},
+  hard:        {label:'Hard',         cls:'lv-hard',         color:'var(--red)',    desc:'Paling jarang muncul dalam percakapan sehari-hari — lebih sering di berita atau konteks formal.'}
+};
+const LEVEL_KEYS = ['easy','intermediate','medium','hard'];
+let levelFilter = 'all';
 
 let mastered = new Set(JSON.parse(localStorage.getItem(LS_KEY) || '[]'));
 const saveMastered = () => localStorage.setItem(LS_KEY, JSON.stringify([...mastered]));
@@ -294,6 +331,10 @@ let pos = 0;
 let flipped = false;
 let sessionHard = new Set();   // index dalam KANJI
 let sessionNewMaster = 0;
+
+function pool(){
+  return KANJI.map((_, i) => i).filter(i => levelFilter === 'all' || KANJI[i].dif === levelFilter);
+}
 
 function shuffled(arr){
   const a = arr.slice();
@@ -326,6 +367,9 @@ function renderCard(){
   $('cardMeaning').textContent = item.m;
   $('cardExample').textContent = item.ex;
   $('cardExampleId').textContent = item.exi;
+  const badge = $('cardLevel');
+  badge.textContent = LEVELS[item.dif].label + ' · N4';
+  badge.className = 'lvl ' + LEVELS[item.dif].cls;
   $('cardCounter').textContent = 'Kartu ' + (pos + 1) + ' dari ' + total;
   $('cardBar').style.width = (pos / total * 100) + '%';
 }
@@ -340,15 +384,39 @@ function endSession(){
   $('hardCount').textContent = sessionHard.size;
 }
 
-function flip(){ 
+function flip(){
   flipped = !flipped;
   $('flashcard').classList.toggle('flip', flipped);
 }
 
 function updatePill(){
-  $('mCount').textContent = mastered.size;
-  $('mTotal').textContent = KANJI.length;
+  const idx = pool();
+  $('mCount').textContent = idx.filter(i => mastered.has(KANJI[i].id)).length;
+  $('mTotal').textContent = idx.length;
 }
+
+/* --- level chips --- */
+function renderChips(){
+  const keys = ['all', ...LEVEL_KEYS];
+  $('levelChips').innerHTML = keys.map(key => {
+    const n = key === 'all' ? KANJI.length : KANJI.filter(it => it.dif === key).length;
+    const dot = key === 'all' ? '' : '<span class="dot" style="background:' + LEVELS[key].color + '"></span>';
+    return '<button class="chip' + (levelFilter === key ? ' active' : '') + '" data-lv="' + key + '" role="tab">' +
+      dot + LEVELS[key].label + ' <span class="cnt">' + n + '</span></button>';
+  }).join('');
+  $('levelDesc').textContent = LEVELS[levelFilter].desc;
+}
+
+$('levelChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if(!chip || chip.dataset.lv === levelFilter) return;
+  levelFilter = chip.dataset.lv;
+  sessionHard = new Set();
+  renderChips();
+  updatePill();
+  renderList($('kanjiSearch').value);
+  buildOrder(pool());
+});
 
 /* --- events kartu --- */
 $('flashcard').addEventListener('click', flip);
@@ -377,12 +445,12 @@ $('btnShuffle').addEventListener('click', () => {
   $('btnShuffle').textContent = '🔀 Acak: ' + (shuffleOn ? 'nyala' : 'mati');
   $('btnShuffle').classList.toggle('on', shuffleOn);
   sessionHard = new Set();
-  buildOrder(KANJI.map((_, i) => i));
+  buildOrder(pool());
 });
 
 $('btnRestart').addEventListener('click', () => {
   sessionHard = new Set();
-  buildOrder(KANJI.map((_, i) => i));
+  buildOrder(pool());
 });
 
 $('btnHardOnly').addEventListener('click', () => {
@@ -394,15 +462,19 @@ $('btnHardOnly').addEventListener('click', () => {
 /* --- events daftar --- */
 function renderList(q){
   q = (q || '').trim().toLowerCase();
-  const items = KANJI.filter(it => !q ||
-    it.k.includes(q) || it.r.includes(q) ||
-    it.m.toLowerCase().includes(q) || it.exi.toLowerCase().includes(q));
+  const items = KANJI.filter(it =>
+    (levelFilter === 'all' || it.dif === levelFilter) &&
+    (!q || it.k.includes(q) || it.r.includes(q) ||
+     it.m.toLowerCase().includes(q) || it.exi.toLowerCase().includes(q)));
   $('kanjiList').innerHTML = items.length ? items.map(it =>
     '<div class="item" data-id="' + it.id + '">' +
       '<div class="top">' +
         '<div class="k">' + it.k + '</div>' +
         '<div class="info"><b>' + it.r + '</b><span>' + it.m + '</span></div>' +
-        (mastered.has(it.id) ? '<span class="tag green">✓ hafal</span>' : '<span class="tag">N4</span>') +
+        '<div class="tags">' +
+          '<span class="tag ' + LEVELS[it.dif].cls + '">' + LEVELS[it.dif].label + '</span>' +
+          (mastered.has(it.id) ? '<span class="tag green">✓ hafal</span>' : '') +
+        '</div>' +
       '</div>' +
       '<div class="ex">' + it.ex + '<div class="id">' + it.exi + '</div></div>' +
     '</div>'
@@ -427,9 +499,10 @@ $('tabList').addEventListener('click', () => {
 });
 
 /* --- init --- */
+renderChips();
 updatePill();
 renderList('');
-buildOrder(KANJI.map((_, i) => i));
+buildOrder(pool());
 </script>
 </body>
 </html>
