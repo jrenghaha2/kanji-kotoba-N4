@@ -25,7 +25,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
 .logo{display:inline-flex;width:30px;height:30px;border-radius:9px;background:var(--accent);color:#fff;align-items:center;justify-content:center;font-size:16px;font-weight:700}
 .pill{background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;box-shadow:var(--shadow);color:var(--muted)}
 .pill b{color:var(--green)}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--surface2);padding:5px;border-radius:12px;margin-top:8px}
+.seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:var(--surface2);padding:5px;border-radius:12px;margin-top:8px}
 .seg button{border:0;background:transparent;padding:9px 8px;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit}
 .seg button.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
 /* level chips */
@@ -50,6 +50,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
 .card{background:var(--surface);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
 .btn{border:0;border-radius:12px;padding:14px 16px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .05s ease}
 .btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
 .btn-green{background:var(--green);color:#fff}
 .btn-orange{background:var(--orange);color:#fff}
 .btn-primary{background:var(--accent);color:#fff}
@@ -91,6 +92,27 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
 .item .ex .id{color:var(--muted);font-size:13px}
 .empty{text-align:center;color:var(--muted);padding:32px 0;font-size:14px}
 .footer-note{text-align:center;color:var(--muted);font-size:12px;margin-top:28px;line-height:1.6}
+/* ===== kuis ===== */
+.quiz-counts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.quiz-card{text-align:center;padding:22px 16px}
+.quiz-main{font-size:56px;font-weight:800;line-height:1.2;margin-top:6px}
+.quiz-main.reading{font-size:38px;color:var(--accent)}
+.quiz-sub{font-size:15px;margin-top:8px}
+.quiz-options{display:grid;gap:8px}
+.quiz-options.two{grid-template-columns:1fr 1fr}
+.opt{border:2px solid transparent;background:var(--surface);box-shadow:var(--shadow);border-radius:14px;padding:14px 12px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;transition:border-color .15s ease,background .15s ease}
+.quiz-options:not(.two) .opt{text-align:left;font-size:15px;font-weight:600;line-height:1.5}
+.opt:not(:disabled):hover{border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.correct{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+.opt.dim{opacity:.55}
+.quiz-review{display:flex;flex-direction:column;gap:8px}
+.qr-item{background:var(--surface2);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.7}
+.qr-item b.k{font-size:18px}
+.qr-item .you{color:var(--red);font-weight:700}
+.qr-item .right{color:var(--green);font-weight:700}
+.score-num{font-size:40px;font-weight:800;color:var(--accent)}
 </style>
 </head>
 <body>
@@ -103,6 +125,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
   <div class="seg" role="tablist" aria-label="Tampilan">
     <button id="tabCard" class="active" role="tab">🃏 Kartu</button>
     <button id="tabList" role="tab">📋 Daftar</button>
+    <button id="tabQuiz" role="tab">❓ Kuis</button>
   </div>
 
   <div class="chips" id="levelChips" role="tablist" aria-label="Level kesulitan"></div>
@@ -151,6 +174,54 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
     <p class="small muted mt12">Ketuk baris untuk melihat contoh kalimat. Tanda ✓ hafal tersimpan otomatis di perangkatmu.</p>
     <input type="search" class="search mt12" id="kanjiSearch" placeholder="Cari kanji / reading / arti…" aria-label="Cari kanji">
     <div class="list mt12" id="kanjiList"></div>
+  </section>
+
+  <!-- ====== KUIS ====== -->
+  <section id="panelQuiz" hidden>
+    <div class="card mt16" id="quizSetup">
+      <h2 class="section">❓ Kuis acak</h2>
+      <p class="small mt8">Mode soal kali ini: <b id="quizTypeLabel"></b><br><span class="muted">Mode &amp; soal diacak ulang setiap masuk menu kuis.</span></p>
+      <p class="small muted mt8">Sumber soal: <span id="quizPoolInfo"></span>. Pilihan jawaban dibuat mengecoh dari kata yang mirip.</p>
+      <p class="small mt12"><b>Pilih jumlah soal:</b></p>
+      <div class="quiz-counts mt8">
+        <button class="btn btn-primary" data-count="10">10 soal</button>
+        <button class="btn btn-primary" data-count="15">15 soal</button>
+        <button class="btn btn-primary" data-count="20">20 soal</button>
+      </div>
+      <p class="small muted mt8" id="quizCapNote"></p>
+    </div>
+
+    <div id="quizRun" hidden>
+      <div class="row between mt12">
+        <span class="small muted" id="quizCounter">Soal 1</span>
+        <span class="lvl" id="quizModeBadge"></span>
+      </div>
+      <div class="bar mt8"><i id="quizBar"></i></div>
+      <div class="card quiz-card mt16">
+        <div class="small muted" id="quizPrompt"></div>
+        <div class="quiz-main" id="quizMain"></div>
+        <div class="quiz-sub muted" id="quizSub"></div>
+      </div>
+      <div class="quiz-options mt12" id="quizOptions"></div>
+    </div>
+
+    <div id="quizResult" class="mt16" hidden>
+      <div class="card done">
+        <div class="big" id="quizEmoji">🎉</div>
+        <h2 class="section mt8">Skor: <span class="score-num" id="quizScore">0</span></h2>
+        <p class="muted small mt8" id="quizScoreMsg"></p>
+        <p class="muted small mt8" id="quizScoreDetail"></p>
+      </div>
+      <div class="card mt12" id="quizWrongWrap" hidden>
+        <div class="section" style="font-size:15px">❌ Yang salah — cek perbaikannya</div>
+        <div class="quiz-review mt8" id="quizWrongList"></div>
+      </div>
+      <div class="card mt12" id="quizRightWrap" hidden>
+        <div class="section" style="font-size:15px">✅ Yang benar</div>
+        <div class="quiz-review mt8" id="quizRightList"></div>
+      </div>
+      <button class="btn btn-primary btn-block mt16" id="btnQuizAgain">🔁 Kuis baru (mode &amp; soal diacak ulang)</button>
+    </div>
   </section>
 
   <div class="footer-note">140 kata kanji JLPT N4 · dibagi 3 level berdasarkan frekuensi pemakaian di kehidupan nyata · progres tersimpan di perangkat ini</div>
@@ -411,6 +482,7 @@ $('levelChips').addEventListener('click', e => {
   updatePill();
   renderList($('kanjiSearch').value);
   buildOrder(pool());
+  if(!$('panelQuiz').hidden) enterQuizSetup();
 });
 
 /* --- events kartu --- */
@@ -482,16 +554,201 @@ $('kanjiList').addEventListener('click', e => {
   if(item) item.classList.toggle('open');
 });
 
+/* ================= KUIS ================= */
+const QTYPES = [
+  {key:'k2r', label:'Kanji → Cara baca', prompt:'Pilih cara baca yang benar untuk:'},
+  {key:'r2k', label:'Hiragana → Kanji', prompt:'Pilih kanji yang cocok untuk bacaan:'},
+  {key:'k2m', label:'Kanji → Arti',     prompt:'Pilih arti yang tepat untuk:'}
+];
+let quizType = QTYPES[0];
+let quizQuestions = [];
+let quizPos = 0;
+let quizWrong = [];
+let quizRight = [];
+
+const dispOf = (it, key) => key === 'k2r' ? it.r : key === 'r2k' ? it.k : it.m;
+
+function sharedKanji(a, b){
+  const isK = ch => /[\u4e00-\u9faf]/.test(ch);
+  const A = new Set([...a].filter(isK)), B = new Set([...b].filter(isK));
+  let n = 0;
+  A.forEach(ch => { if(B.has(ch)) n++; });
+  return n;
+}
+function kanaSim(a, b){
+  const grams = s => { const g = new Set(); for(let i = 0; i < s.length - 1; i++) g.add(s.slice(i, i + 2)); return g; };
+  const A = grams(a), B = grams(b);
+  let n = 0;
+  A.forEach(x => { if(B.has(x)) n++; });
+  if(a[0] === b[0]) n += 0.75;
+  if(Math.abs(a.length - b.length) <= 1) n += 0.25;
+  return n;
+}
+function meaningSim(a, b){
+  const tok = s => s.toLowerCase().split(/[^a-z]+/).filter(w => w.length > 2);
+  const A = new Set(tok(a)), B = new Set(tok(b));
+  let n = 0;
+  A.forEach(w => { if(B.has(w)) n++; });
+  return n;
+}
+
+/* Distraktor mengecoh: dipilih dari kata yang PALING MIRIP, bukan acak polos */
+function pickDistractors(item, key, count){
+  const scored = KANJI.filter(it => it.id !== item.id).map(it => {
+    let s;
+    if(key === 'k2r')      s = sharedKanji(item.k, it.k) * 3 + kanaSim(item.r, it.r);
+    else if(key === 'r2k') s = kanaSim(item.r, it.r) * 2 + sharedKanji(item.k, it.k) * 1.5;
+    else                   s = meaningSim(item.m, it.m) * 3 + (it.dif === item.dif ? 0.5 : 0) + kanaSim(item.r, it.r) * 0.25;
+    return { it, s: s + Math.random() * 0.4 };
+  }).sort((a, b) => b.s - a.s);
+  const seen = new Set([dispOf(item, key)]);
+  const out = [];
+  for(const { it } of scored){
+    const d = dispOf(it, key);
+    if(seen.has(d)) continue;
+    seen.add(d);
+    out.push(it);
+    if(out.length === count) break;
+  }
+  return out;
+}
+
+function makeQuestion(item){
+  return { item, options: shuffled([item, ...pickDistractors(item, quizType.key, 3)]) };
+}
+
+function enterQuizSetup(){
+  quizType = QTYPES[Math.floor(Math.random() * QTYPES.length)];
+  $('quizSetup').hidden = false;
+  $('quizRun').hidden = true;
+  $('quizResult').hidden = true;
+  const n = pool().length;
+  $('quizTypeLabel').textContent = quizType.label;
+  $('quizPoolInfo').textContent = 'level ' + LEVELS[levelFilter].label + ' (' + n + ' kata)';
+  const capped = [];
+  document.querySelectorAll('#quizSetup [data-count]').forEach(btn => {
+    const c = +btn.dataset.count;
+    btn.disabled = c > n;
+    if(c > n) capped.push(c);
+  });
+  $('quizCapNote').textContent = capped.length
+    ? 'Level "' + LEVELS[levelFilter].label + '" cuma punya ' + n + ' kata, jadi pilihan ' + capped.join(' & ') + ' soal dimatikan.'
+    : '';
+}
+
+function startQuiz(count){
+  const idx = shuffled(pool());
+  const n = Math.min(count, idx.length);
+  quizQuestions = idx.slice(0, n).map(i => makeQuestion(KANJI[i]));
+  quizPos = 0;
+  quizWrong = [];
+  quizRight = [];
+  $('quizSetup').hidden = true;
+  $('quizResult').hidden = true;
+  $('quizRun').hidden = false;
+  $('quizModeBadge').textContent = quizType.label;
+  renderQuizQ();
+}
+
+document.querySelectorAll('#quizSetup [data-count]').forEach(btn => {
+  btn.addEventListener('click', () => startQuiz(+btn.dataset.count));
+});
+
+function renderQuizQ(){
+  const q = quizQuestions[quizPos];
+  const t = quizType.key;
+  $('quizCounter').textContent = 'Soal ' + (quizPos + 1) + ' dari ' + quizQuestions.length;
+  $('quizBar').style.width = (quizPos / quizQuestions.length * 100) + '%';
+  $('quizPrompt').textContent = quizType.prompt;
+  const main = $('quizMain'), sub = $('quizSub');
+  main.classList.remove('reading');
+  if(t === 'k2r'){ main.textContent = q.item.k; sub.textContent = ''; }
+  else if(t === 'r2k'){ main.textContent = q.item.r; main.classList.add('reading'); sub.textContent = ''; }
+  else { main.textContent = q.item.k; sub.textContent = q.item.r; }
+  const box = $('quizOptions');
+  box.className = 'quiz-options mt12' + (t === 'k2m' ? '' : ' two');
+  box.innerHTML = '';
+  q.options.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = t === 'k2r' ? opt.r : t === 'r2k' ? opt.k : opt.m;
+    b.addEventListener('click', () => answerQuiz(b, opt, q));
+    box.appendChild(b);
+  });
+}
+
+function answerQuiz(btn, opt, q){
+  const box = $('quizOptions');
+  const buttons = [...box.children];
+  buttons.forEach(b => { b.disabled = true; });
+  const correct = opt.id === q.item.id;
+  buttons.forEach((b, i) => {
+    if(q.options[i].id === q.item.id) b.classList.add('correct');
+    else if(b !== btn) b.classList.add('dim');
+  });
+  if(!correct) btn.classList.add('wrong');
+  const rec = { no: quizPos + 1, item: q.item, type: quizType.key, chosen: opt };
+  (correct ? quizRight : quizWrong).push(rec);
+  setTimeout(() => {
+    quizPos++;
+    if(quizPos < quizQuestions.length) renderQuizQ();
+    else showQuizResult();
+  }, correct ? 350 : 800);
+}
+
+function reviewText(rec){
+  const it = rec.item, t = rec.type, ch = rec.chosen;
+  if(t === 'k2r')
+    return '<b class="k">' + it.k + '</b> — seharusnya dibaca <span class="right">' + it.r + '</span>, artinya "' + it.m + '".<br>Jawabanmu: <span class="you">' + ch.r + '</span> (= ' + ch.k + ', "' + ch.m + '")';
+  if(t === 'r2k')
+    return 'Bacaan <b>' + it.r + '</b> — seharusnya <span class="right">' + it.k + '</span>, artinya "' + it.m + '".<br>Jawabanmu: <span class="you">' + ch.k + '</span> (dibaca ' + ch.r + ', "' + ch.m + '")';
+  return '<b class="k">' + it.k + '</b> (' + it.r + ') — artinya <span class="right">"' + it.m + '"</span>.<br>Jawabanmu: <span class="you">"' + ch.m + '"</span> (= ' + ch.k + ')';
+}
+
+function showQuizResult(){
+  $('quizRun').hidden = true;
+  $('quizResult').hidden = false;
+  const total = quizQuestions.length, ok = quizRight.length;
+  const score = Math.round(ok / total * 100);
+  $('quizScore').textContent = score;
+  $('quizScoreDetail').textContent = ok + ' benar · ' + quizWrong.length + ' salah · mode ' + quizType.label;
+  let emoji, msg;
+  if(score === 100){ emoji = '🏆'; msg = 'Sempurna! Semua benar.'; }
+  else if(score >= 80){ emoji = '🎉'; msg = 'Hebat! Sedikit lagi sempurna.'; }
+  else if(score >= 60){ emoji = '💪'; msg = 'Lumayan! Terus latihan ya.'; }
+  else if(score >= 40){ emoji = '📚'; msg = 'Masih perlu dipelajari lagi, semangat!'; }
+  else { emoji = '🔁'; msg = 'Jangan menyerah — ulangi kartunya lalu coba lagi!'; }
+  $('quizEmoji').textContent = emoji;
+  $('quizScoreMsg').textContent = msg;
+  const ww = $('quizWrongWrap');
+  if(quizWrong.length){
+    ww.hidden = false;
+    $('quizWrongList').innerHTML = quizWrong.map(r =>
+      '<div class="qr-item"><b>No. ' + r.no + '</b> · ' + reviewText(r) + '</div>').join('');
+  } else ww.hidden = true;
+  const rw = $('quizRightWrap');
+  if(quizRight.length){
+    rw.hidden = false;
+    $('quizRightList').innerHTML = quizRight.map(r =>
+      '<div class="qr-item"><b>No. ' + r.no + '</b> · ✅ <b class="k">' + r.item.k + '</b> ' + r.item.r + ' — ' + r.item.m + '</div>').join('');
+  } else rw.hidden = true;
+}
+
+$('btnQuizAgain').addEventListener('click', enterQuizSetup);
+
 /* --- tab --- */
-$('tabCard').addEventListener('click', () => {
-  $('tabCard').classList.add('active'); $('tabList').classList.remove('active');
-  $('panelCard').hidden = false; $('panelList').hidden = true;
-});
-$('tabList').addEventListener('click', () => {
-  $('tabList').classList.add('active'); $('tabCard').classList.remove('active');
-  $('panelList').hidden = false; $('panelCard').hidden = true;
-  renderList($('kanjiSearch').value);
-});
+function switchTab(which){
+  const tabs = { card:['tabCard','panelCard'], list:['tabList','panelList'], quiz:['tabQuiz','panelQuiz'] };
+  Object.entries(tabs).forEach(([k, [t, p]]) => {
+    $(t).classList.toggle('active', k === which);
+    $(p).hidden = k !== which;
+  });
+  if(which === 'list') renderList($('kanjiSearch').value);
+  if(which === 'quiz') enterQuizSetup();
+}
+$('tabCard').addEventListener('click', () => switchTab('card'));
+$('tabList').addEventListener('click', () => switchTab('list'));
+$('tabQuiz').addEventListener('click', () => switchTab('quiz'));
 
 /* --- init --- */
 renderChips();
