@@ -5,115 +5,347 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>N4 Kanji — Flashcard per Level</title>
 <style>
-:root{
-  --bg:#f4f5f7; --surface:#ffffff; --surface2:#eceef2;
-  --text:#1a1d23; --muted:#6b7280;
-  --accent:#4f46e5; --accent-soft:#eef0ff;
-  --green:#16a34a; --green-soft:#e9f7ef;
-  --blue:#2563eb; --blue-soft:#e8f0fe;
-  --orange:#ea7c28; --orange-soft:#fdf0e4;
-  --red:#dc2626; --red-soft:#fdeaea;
-  --radius:16px;
-  --shadow:0 1px 3px rgba(16,24,40,.06),0 4px 16px rgba(16,24,40,.06);
+/* ================= DESAIN UI / UX BARU ================= */
+:root {
+  /* Palet warna yang lebih kaya dan organik */
+  --bg-grad: linear-gradient(135deg, #f3f6f9 0%, #e2e8f0 100%);
+  --surface: rgba(255, 255, 255, 0.95);
+  --surface-solid: #ffffff;
+  --surface2: #f1f5f9;
+  --text: #0f172a;
+  --muted: #64748b;
+  
+  --accent: #6366f1; /* Indigo modern */
+  --accent-hover: #4f46e5;
+  --accent-soft: #e0e7ff;
+  
+  --green: #10b981; /* Emerald */
+  --green-soft: #d1fae5;
+  --blue: #3b82f6;
+  --blue-soft: #dbeafe;
+  --orange: #f59e0b;
+  --orange-soft: #fef3c7;
+  --red: #f43f5e; /* Rose / Red */
+  --red-soft: #ffe4e6;
+  
+  --radius: 20px;
+  /* Bayangan berlapis untuk kedalaman */
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+  --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  --shadow-hover: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justify-content:center;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Hiragino Sans","Noto Sans JP",sans-serif}
-.phone{width:100%;max-width:480px;min-height:100vh;padding:0 16px 40px}
-.appbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:14px 0;background:var(--bg)}
-.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;flex:1}
-.logo{display:inline-flex;width:30px;height:30px;border-radius:9px;background:var(--accent);color:#fff;align-items:center;justify-content:center;font-size:16px;font-weight:700}
-.pill{background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;box-shadow:var(--shadow);color:var(--muted)}
-.pill b{color:var(--green)}
-.seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:var(--surface2);padding:5px;border-radius:12px;margin-top:8px}
-.seg button{border:0;background:transparent;padding:9px 8px;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit}
-.seg button.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
-/* level chips */
-.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 2px 2px;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chip{border:0;background:var(--surface);box-shadow:var(--shadow);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-flex;gap:7px;align-items:center}
-.chip .dot{width:8px;height:8px;border-radius:50%;flex:none}
-.chip .cnt{font-weight:600;font-size:12px;opacity:.55}
-.chip.active{background:var(--text);color:#fff}
-.lvl-desc{font-size:12.5px;color:var(--muted);margin-top:8px;padding:0 2px;line-height:1.5}
-/* level colors */
-.lv-easy{background:var(--green-soft);color:var(--green)}
-.lv-intermediate{background:var(--blue-soft);color:var(--blue)}
-.lv-medium{background:var(--orange-soft);color:var(--orange)}
-.lv-hard{background:var(--red-soft);color:var(--red)}
-.row{display:flex;align-items:center;gap:10px}
-.between{justify-content:space-between}
-.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
-.small{font-size:13px}.muted{color:var(--muted)}
-.bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
-.bar i{display:block;height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
-.card{background:var(--surface);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
-.btn{border:0;border-radius:12px;padding:14px 16px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .05s ease}
-.btn:active{transform:scale(.98)}
-.btn[disabled]{opacity:.4;cursor:not-allowed}
-.btn-green{background:var(--green);color:#fff}
-.btn-orange{background:var(--orange);color:#fff}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-block{width:100%}
-.toggle-btn{border:0;background:var(--surface);box-shadow:var(--shadow);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit}
-.toggle-btn.on{color:var(--accent)}
-.toggle-btn[disabled]{opacity:.4;cursor:not-allowed}
-/* flashcard */
-.flash-wrap{perspective:1200px;margin-top:16px}
-.flashcard{position:relative;width:100%;height:340px;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.2,.7,.3,1);cursor:pointer}
-.flashcard.flip{transform:rotateY(180deg)}
-.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);border-radius:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;overflow:auto}
-.face.back{transform:rotateY(180deg);justify-content:flex-start;padding-top:36px}
-.kanji-big{font-size:88px;font-weight:700;line-height:1.15}
-.hint{margin-top:18px;font-size:12px;color:var(--muted)}
-.reading{font-size:30px;font-weight:800;color:var(--accent)}
-.meaning{font-size:19px;font-weight:700;margin-top:6px}
-.lvl{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);margin-top:12px}
-.example{margin-top:16px;font-size:15px;line-height:1.7;background:var(--surface2);padding:12px 14px;border-radius:12px;width:100%}
-.example-id{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6}
-.fc-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-/* done */
-.done{text-align:center;padding:28px 16px}
-.done .big{font-size:44px}
-.section{font-size:18px;font-weight:800}
-/* list */
-.search{width:100%;border:0;background:var(--surface);box-shadow:var(--shadow);border-radius:12px;padding:13px 16px;font-size:15px;font-family:inherit;outline:none}
-.list{display:flex;flex-direction:column;gap:8px}
-.item{background:var(--surface);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);cursor:pointer}
-.item .top{display:flex;align-items:center;gap:12px}
-.item .k{font-size:26px;font-weight:700;min-width:52px;text-align:center}
-.item .info{flex:1;min-width:0}
-.item .info b{display:block;font-size:14px}
-.item .info span{font-size:13px;color:var(--muted)}
-.item .tags{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
-.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--surface2);color:var(--muted);white-space:nowrap}
-.tag.green{background:var(--green-soft);color:var(--green)}
-.item .ex{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--surface2);font-size:14px;line-height:1.7}
-.item.open .ex{display:block}
-.item .ex .id{color:var(--muted);font-size:13px}
-.empty{text-align:center;color:var(--muted);padding:32px 0;font-size:14px}
-.footer-note{text-align:center;color:var(--muted);font-size:12px;margin-top:28px;line-height:1.6}
-/* ===== kuis ===== */
-.quiz-counts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.quiz-card{text-align:center;padding:22px 16px}
-.quiz-main{font-size:56px;font-weight:800;line-height:1.2;margin-top:6px}
-.quiz-main.reading{font-size:38px;color:var(--accent)}
-.quiz-sub{font-size:15px;margin-top:8px}
-.quiz-options{display:grid;gap:8px}
-.quiz-options.two{grid-template-columns:1fr 1fr}
-.opt{border:2px solid transparent;background:var(--surface);box-shadow:var(--shadow);border-radius:14px;padding:14px 12px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;transition:border-color .15s ease,background .15s ease}
-.quiz-options:not(.two) .opt{text-align:left;font-size:15px;font-weight:600;line-height:1.5}
-.opt:not(:disabled):hover{border-color:var(--accent)}
-.opt:disabled{cursor:default}
-.opt.correct{background:var(--green-soft);border-color:var(--green);color:var(--green)}
-.opt.wrong{background:var(--red-soft);border-color:var(--red);color:var(--red)}
-.opt.dim{opacity:.55}
-.quiz-review{display:flex;flex-direction:column;gap:8px}
-.qr-item{background:var(--surface2);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.7}
-.qr-item b.k{font-size:18px}
-.qr-item .you{color:var(--red);font-weight:700}
-.qr-item .right{color:var(--green);font-weight:700}
-.score-num{font-size:40px;font-weight:800;color:var(--accent)}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg-grad);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+.phone { width: 100%; max-width: 480px; min-height: 100vh; padding: 0 16px 40px; position: relative; }
+
+/* --- Glassmorphism Appbar --- */
+.appbar {
+  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; 
+  padding: 16px 0; 
+  background: rgba(243, 246, 249, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.4);
+  margin: 0 -16px; padding-left: 16px; padding-right: 16px;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; flex: 1; letter-spacing: -0.3px; }
+.logo { display: inline-flex; width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--blue)); color: #fff; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
+
+.pill { background: var(--surface-solid); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 700; box-shadow: var(--shadow-sm); color: var(--muted); border: 1px solid rgba(0,0,0,0.03); }
+.pill b { color: var(--green); }
+
+/* --- Tab Segments --- */
+.seg { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; background: rgba(0,0,0,0.04); padding: 6px; border-radius: 14px; margin-top: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+.seg button { border: 0; background: transparent; padding: 10px 4px; border-radius: 10px; font-size: 14px; font-weight: 700; color: var(--muted); cursor: pointer; font-family: inherit; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.seg button.active { background: var(--surface-solid); color: var(--accent); box-shadow: var(--shadow-sm); transform: scale(1.02); }
+
+/* --- Level Chips --- */
+.chips { display: flex; gap: 10px; overflow-x: auto; padding: 16px 2px 4px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { border: 1px solid rgba(0,0,0,0.05); background: var(--surface-solid); box-shadow: var(--shadow-sm); border-radius: 999px; padding: 10px 16px; font-size: 14px; font-weight: 700; color: var(--muted); cursor: pointer; font-family: inherit; white-space: nowrap; display: inline-flex; gap: 8px; align-items: center; transition: all 0.2s ease; }
+.chip:active { transform: scale(0.95); }
+.chip .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); }
+.chip .cnt { font-weight: 700; font-size: 12px; opacity: 0.6; background: var(--surface2); padding: 2px 8px; border-radius: 9px; margin-left: 2px; }
+.chip.active { background: var(--text); color: #fff; border-color: var(--text); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); }
+.chip.active .cnt { background: rgba(255,255,255,0.2); color: #fff; }
+
+.lvl-desc { font-size: 13px; color: var(--muted); margin-top: 10px; padding: 0 4px; line-height: 1.6; }
+
+.lv-easy { background: var(--green-soft); color: #047857; }
+.lv-intermediate { background: var(--blue-soft); color: #1d4ed8; }
+.lv-medium { background: var(--orange-soft); color: #b45309; }
+.lv-hard { background: var(--red-soft); color: #be123c; }
+
+/* --- Utilities --- */
+.row { display: flex; align-items: center; gap: 10px; }
+.between { justify-content: space-between; }
+.mt8 { margin-top: 8px; } .mt12 { margin-top: 12px; } .mt16 { margin-top: 16px; }
+.small { font-size: 13px; } .muted { color: var(--muted); }
+
+/* --- Animasi Masuk Section --- */
+section:not([hidden]) { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Shimmer Progress Bar --- */
+.bar { height: 10px; border-radius: 99px; background: rgba(0,0,0,0.06); overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+.bar i { 
+  display: block; height: 100%; width: 0%; 
+  background: linear-gradient(90deg, var(--accent), #818cf8); 
+  border-radius: 99px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+  position: relative; overflow: hidden;
+}
+.bar i::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  display: none;
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* --- Kartu Umum --- */
+.card { background: var(--surface-solid); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.8); }
+
+/* --- Tombol Fisik (Bouncy) --- */
+.btn { border: 0; border-radius: 14px; padding: 15px 16px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; overflow: hidden; }
+.btn:active:not([disabled]) { transform: scale(0.92); }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+.btn::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.1); opacity: 0; transition: opacity 0.2s; }
+.btn:hover::after { opacity: 1; }
+.btn-green { background: linear-gradient(135deg, var(--green), #059669); color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); }
+.btn-orange { background: linear-gradient(135deg, var(--orange), #d97706); color: #fff; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25); }
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: #fff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25); }
+.btn-block { width: 100%; }
+
+.toggle-btn { border: 1px solid rgba(0,0,0,0.04); background: var(--surface-solid); box-shadow: var(--shadow-sm); border-radius: 12px; padding: 10px 14px; font-size: 13.5px; font-weight: 700; color: var(--muted); cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.toggle-btn:active:not([disabled]) { transform: scale(0.95); }
+.toggle-btn.on { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+.toggle-btn[disabled] { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+/* --- Animasi Float & Flashcard Mewah --- */
+.flash-wrap { perspective: 1200px; margin-top: 20px;  }
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.flashcard { position: relative; width: 100%; height: 350px; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; }
+.flashcard.flip { transform: rotateY(180deg); }
+
+.face { 
+  position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; 
+  background: linear-gradient(145deg, #ffffff, #f8fafc); 
+  border-radius: 24px; 
+  box-shadow: 0 15px 35px -10px rgba(15, 23, 42, 0.15), inset 0 0 0 1px rgba(255,255,255,1), inset 0 0 20px rgba(0,0,0,0.02); 
+  display: flex; flex-direction: column; align-items: center; justify-content: center; 
+  padding: 24px; text-align: center; overflow: auto; 
+}
+.face.back { transform: rotateY(180deg); justify-content: flex-start; padding-top: 40px; }
+
+.kanji-big { font-size: 96px; font-weight: 800; line-height: 1.1; background: linear-gradient(180deg, var(--text), #334155); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08)); }
+.hint { margin-top: 24px; font-size: 13px; font-weight: 600; color: #94a3b8; background: var(--surface2); padding: 6px 14px; border-radius: 99px; }
+
+.reading { font-size: 32px; font-weight: 800; color: var(--accent); letter-spacing: 1px; }
+.meaning { font-size: 20px; font-weight: 700; margin-top: 8px; color: var(--text); }
+.lvl { display: inline-block; font-size: 12px; font-weight: 800; padding: 4px 12px; border-radius: 999px; margin-top: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.example { margin-top: 20px; font-size: 16px; line-height: 1.6; background: rgba(0,0,0,0.03); padding: 16px; border-radius: 16px; width: 100%; border-left: 4px solid var(--accent); text-align: left; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+.example-id { font-size: 14px; color: var(--muted); margin-top: 10px; line-height: 1.5; font-weight: 500; }
+
+.fc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+
+/* --- State Selesai --- */
+.done { text-align: center; padding: 32px 20px; background: linear-gradient(135deg, #ffffff, #fdfbfb); }
+.done .big { font-size: 52px; animation: bounceEmoji 2s infinite; display: inline-block; }
+@keyframes bounceEmoji { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.section { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+
+/* --- Daftar Kanji List --- */
+.search { width: 100%; border: 1px solid rgba(0,0,0,0.05); background: var(--surface-solid); box-shadow: var(--shadow-sm); border-radius: 16px; padding: 16px; font-size: 16px; font-family: inherit; outline: none; transition: all 0.3s; font-weight: 600; }
+.search:focus { box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); border-color: var(--accent); }
+
+.list { display: flex; flex-direction: column; gap: 12px; }
+.item { background: var(--surface-solid); border-radius: 16px; padding: 14px 16px; box-shadow: var(--shadow-sm); cursor: pointer; border: 1px solid rgba(0,0,0,0.03); transition: all 0.2s ease; position: relative; overflow: hidden; }
+.item:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.item:active { transform: scale(0.98); }
+
+.item .top { display: flex; align-items: center; gap: 14px; }
+.item .k { font-size: 28px; font-weight: 800; min-width: 56px; text-align: center; color: var(--text); }
+.item .info { flex: 1; min-width: 0; }
+.item .info b { display: block; font-size: 16px; font-weight: 800; margin-bottom: 2px; }
+.item .info span { font-size: 14px; color: var(--muted); font-weight: 500; }
+.item .tags { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.tag { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 6px; background: var(--surface2); color: var(--muted); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.5px; }
+.tag.green { background: var(--green-soft); color: #047857; }
+
+/* Expand animation for list */
+.item .ex { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 15px; line-height: 1.6; font-weight: 500; }
+.item.open .ex { display: block; animation: expandDetails 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes expandDetails { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.item .ex .id { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+.empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 15px; font-weight: 600; }
+.footer-note { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 32px; line-height: 1.6; font-weight: 500; }
+
+/* ===== Kuis ===== */
+.quiz-counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.quiz-card { text-align: center; padding: 30px 16px; background: linear-gradient(145deg, #ffffff, #f8fafc); border-radius: 24px; border: 1px solid rgba(255,255,255,1); }
+.quiz-main { font-size: 64px; font-weight: 800; line-height: 1.2; margin-top: 8px; color: var(--text); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05)); }
+.quiz-main.reading { font-size: 42px; color: var(--accent); }
+.quiz-sub { font-size: 16px; margin-top: 10px; font-weight: 700; }
+
+.quiz-options { display: grid; gap: 12px; }
+.quiz-options.two { grid-template-columns: 1fr 1fr; }
+.opt { 
+  border: 2px solid rgba(0,0,0,0.05); background: var(--surface-solid); box-shadow: var(--shadow-sm); 
+  border-radius: 16px; padding: 18px 14px; font-size: 18px; font-weight: 800; cursor: pointer; 
+  font-family: inherit; text-align: center; transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
+  color: var(--text);
+}
+.quiz-options:not(.two) .opt { text-align: left; font-size: 16px; font-weight: 700; line-height: 1.5; padding: 16px 20px; }
+.opt:not(:disabled):hover { border-color: var(--accent-soft); transform: translateY(-2px); box-shadow: var(--shadow); color: var(--accent); }
+.opt:not(:disabled):active { transform: scale(0.95); }
+.opt:disabled { cursor: default; }
+
+/* Animasi Jawaban Kuis */
+.opt.correct { 
+  background: var(--green-soft); border-color: var(--green); color: #047857; 
+  animation: popCorrect 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; z-index: 2; position: relative;
+}
+.opt.wrong { 
+  background: var(--red-soft); border-color: var(--red); color: #be123c; 
+  animation: shakeWrong 0.4s ease forwards;
+}
+.opt.dim { opacity: 0.4; transform: scale(0.98); }
+
+@keyframes popCorrect { 0% { transform: scale(1); } 50% { transform: scale(1.05); box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); } 100% { transform: scale(1); } }
+@keyframes shakeWrong { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+
+.quiz-review { display: flex; flex-direction: column; gap: 10px; }
+.qr-item { background: rgba(0,0,0,0.03); border-radius: 14px; padding: 14px 16px; font-size: 15px; line-height: 1.6; border-left: 4px solid transparent; font-weight: 500; }
+.qr-item:has(.you) { border-left-color: var(--red); }
+.qr-item:not(:has(.you)) { border-left-color: var(--green); }
+.qr-item b.k { font-size: 20px; font-weight: 800; }
+.qr-item .you { color: var(--red); font-weight: 800; background: var(--red-soft); padding: 2px 6px; border-radius: 6px; }
+.qr-item .right { color: var(--green); font-weight: 800; background: var(--green-soft); padding: 2px 6px; border-radius: 6px; }
+
+.score-num { font-size: 56px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+/* rapikan baris tombol agar label panjang tidak terpotong */
+#panelCard .row.between{flex-wrap:wrap;row-gap:8px}
+#panelCard .row.between .toggle-btn{white-space:nowrap}
+#panelCard .row.between > .row{flex-wrap:wrap}
+#fcActions .btn{padding-left:6px;padding-right:6px}
+@media (max-width:400px){ #fcActions .btn{font-size:13px} #panelCard .row.between .toggle-btn{font-size:12.5px;padding:9px 10px} }
+
+/* ================= TAMPILAN DESKTOP / PC (layar lebar) ================= */
+.kbd-hint{display:none}
+.sidebar{display:contents}
+@media (min-width:900px){
+  body{align-items:flex-start}
+  .phone{max-width:1480px;min-height:100vh;padding:0 48px 28px;display:grid;
+    grid-template-columns:300px minmax(0,1fr);grid-template-rows:auto 1fr auto;column-gap:44px;align-content:start}
+  html,body{overflow-x:clip}
+  .appbar{grid-column:1/-1;margin:0 -48px;padding:16px 48px;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;border-bottom:0}
+  .appbar::before{content:'';position:absolute;z-index:-1;top:0;bottom:0;left:50%;width:100vw;margin-left:-50vw;
+    background:rgba(243,246,249,.78);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.5)}
+  .brand{font-size:22px}
+  .logo{width:40px;height:40px;font-size:22px;border-radius:12px}
+  .pill{font-size:15px;padding:8px 18px}
+
+  /* sidebar kiri: menu + level */
+  .sidebar{display:block;grid-column:1;grid-row:2;position:sticky;top:92px;align-self:start;margin-top:24px}
+  .seg{grid-template-columns:1fr;margin-top:0;padding:6px}
+  .seg button{text-align:left;padding:13px 16px;font-size:15px}
+  .seg button:not(.active):hover{background:rgba(255,255,255,.6);color:var(--text)}
+  .chips{flex-direction:column;overflow:visible;padding:22px 0 0;gap:8px}
+  .chip{width:100%;justify-content:flex-start;padding:12px 16px;font-size:14.5px}
+  .chip:not(.active):hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+  .chip .cnt{margin-left:auto}
+  .lvl-desc{font-size:13.5px;margin-top:16px;padding:14px 16px;background:rgba(255,255,255,.55);border-radius:14px;border:1px solid rgba(255,255,255,.8)}
+
+  /* area utama kanan */
+  #panelCard,#panelList,#panelQuiz{grid-column:2;grid-row:2;margin-top:24px;min-width:0}
+  .footer-note{grid-column:1/-1;grid-row:3;margin-top:24px}
+
+  /* --- Kartu: flashcard besar di kiri, kontrol di kanan --- */
+  #panelCard:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) 340px;column-gap:32px;row-gap:14px;
+    grid-template-rows:auto auto auto auto auto auto 1fr auto;align-content:start}
+  #panelCard > *{margin-top:0 !important}
+  #panelCard > .row.between{grid-column:1/-1;grid-row:1;flex-wrap:nowrap}
+  #panelCard > .row.between .toggle-btn{font-size:14px;padding:10px 16px}
+  #panelCard > .bar{grid-column:1/-1;grid-row:2}
+  #panelCard > .flash-wrap{grid-column:1;grid-row:3 / 8}
+  #btnHardMode{grid-column:2;grid-row:3;padding:13px 14px !important;font-size:14.5px}
+  #fcActions{grid-column:2;grid-row:4;grid-template-columns:1fr !important;gap:10px !important}
+  #fcActions .btn{padding:17px 14px;font-size:16px}
+  #fcRow2{grid-column:2;grid-row:5;gap:10px !important}
+  #fcRow3{grid-column:2;grid-row:6;gap:10px !important}
+  #panelCard > .kbd-hint{display:block;grid-column:1/-1;grid-row:8;text-align:center;font-size:12.5px;color:var(--muted);line-height:1.9;font-weight:600}
+  #panelCard > .done{grid-column:1/-1;grid-row:3 / 8}
+  .flashcard{height:clamp(420px,calc(100vh - 300px),760px)}
+  .kanji-big{font-size:clamp(76px,min(16vh,9vw),190px);white-space:nowrap}
+  .hint{font-size:14px;padding:8px 18px}
+  .face{padding:36px 48px}
+  .face.back{padding-top:48px}
+  .reading{font-size:clamp(38px,5vh,52px)}
+  .meaning{font-size:clamp(22px,3vh,30px);margin-top:10px}
+  .example{font-size:clamp(18px,2.4vh,22px);padding:20px 24px;max-width:760px}
+  .example-id{font-size:16px}
+  .lvl{font-size:13px;padding:5px 14px}
+
+  /* --- Daftar: grid beberapa kolom --- */
+  #panelList .search{font-size:17px;padding:18px 20px;max-width:640px}
+  .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;align-items:start}
+  .item .k{font-size:32px}
+
+  /* --- Kuis --- */
+  #quizSetup{max-width:780px;margin-left:auto;margin-right:auto;padding:28px 32px}
+  #quizRun{max-width:900px;margin-left:auto;margin-right:auto}
+  .quiz-card{padding:44px 24px}
+  .quiz-main{font-size:clamp(80px,13vh,130px)}
+  .quiz-main.reading{font-size:clamp(52px,8vh,72px)}
+  .quiz-sub{font-size:20px}
+  .quiz-options:not(.two){grid-template-columns:1fr 1fr}
+  .opt{padding:22px 18px}
+  #quizRun .kbd-hint{display:block;text-align:center;margin-top:14px;font-size:12.5px;color:var(--muted);font-weight:600}
+  #quizResult{max-width:1000px;margin-left:auto;margin-right:auto;display:grid;grid-template-columns:1fr 1fr;column-gap:20px;align-items:start}
+  #quizResult:not([hidden]) > *{margin-top:16px}
+  #quizResult > .card.done,#quizResult > #btnQuizAgain{grid-column:1/-1}
+  #quizResult[hidden]{display:none}
+  .kbd-hint kbd{display:inline-block;min-width:22px;padding:1px 7px;margin:0 2px;border-radius:6px;background:var(--surface-solid);border:1px solid rgba(0,0,0,.12);box-shadow:0 1px 0 rgba(0,0,0,.1);font:inherit;font-size:12px;text-align:center;color:var(--text)}
+}
+@media (min-width:900px) and (max-width:1199px){
+  .phone{padding:0 28px 24px;grid-template-columns:210px minmax(0,1fr);column-gap:26px}
+  .appbar{margin:0 -28px;padding:14px 28px}
+  #panelCard:not([hidden]){grid-template-columns:minmax(0,1fr) 270px;column-gap:20px}
+  #panelCard > .row.between .toggle-btn{font-size:12.5px;padding:9px 12px}
+  .face{padding:24px 16px}
+  .hint{font-size:12.5px;padding:6px 12px}
+  #fcActions .btn{padding:15px 10px;font-size:15px}
+  #fcRow2 .toggle-btn,#fcRow3 .toggle-btn{font-size:12px;padding:9px 6px}
+  .list{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+}
+@media (min-width:1500px){
+  .phone{max-width:1760px;grid-template-columns:320px minmax(0,1fr)}
+  .flashcard{height:clamp(480px,calc(100vh - 300px),700px)}
+  #panelCard:not([hidden]){grid-template-columns:minmax(0,1fr) 380px}
+}
+@media (prefers-reduced-motion: reduce){ *{animation:none !important;transition:none !important} }
 </style>
 </head>
 <body>
@@ -123,6 +355,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
     <span class="pill">✓ <b id="mCount">0</b>/<span id="mTotal">0</span> hafal</span>
   </header>
 
+  <div class="sidebar">
   <div class="seg" role="tablist" aria-label="Tampilan">
     <button id="tabCard" class="active" role="tab">🃏 Kartu</button>
     <button id="tabList" role="tab">📋 Daftar</button>
@@ -131,18 +364,19 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
 
   <div class="chips" id="levelChips" role="tablist" aria-label="Level kesulitan"></div>
   <p class="lvl-desc" id="levelDesc"></p>
+  </div>
 
   <!-- ====== KARTU ====== -->
   <section id="panelCard">
     <div class="row between mt12">
-      <span class="small muted" id="cardCounter">Kartu 1</span>
-      <div class="row" style="gap:6px">
+      <span class="small muted" id="cardCounter" style="font-weight:700">Kartu 1</span>
+      <div class="row" style="gap:8px">
         <button class="toggle-btn" id="btnHideMastered">🙈 Sembunyikan hafal: mati</button>
         <button class="toggle-btn" id="btnShuffle">🔀 Acak: mati</button>
       </div>
     </div>
-    <div class="bar mt8"><i id="cardBar"></i></div>
-    <button class="toggle-btn mt8" id="btnHardMode" style="width:100%">⚠ Kartu sulit (0)</button>
+    <div class="bar mt12"><i id="cardBar"></i></div>
+    <button class="toggle-btn mt12" id="btnHardMode" style="width:100%; border: 1px dashed rgba(0,0,0,0.2);">⚠ Kartu sulit (0)</button>
 
     <div class="flash-wrap" id="flashWrap">
       <div class="flashcard" id="flashcard" role="button" tabindex="0" aria-label="Kartu kanji, ketuk untuk membalik">
@@ -160,26 +394,28 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
       </div>
     </div>
 
-    <div class="fc-actions" id="fcActions" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="fc-actions" id="fcActions" style="grid-template-columns:1fr 1fr 1fr; gap: 8px;">
       <button class="btn btn-primary" id="btnUlangi">Selanjutnya →</button>
       <button class="btn btn-orange" id="btnSulit">⚠ Sulit</button>
       <button class="btn btn-green" id="btnHafal">✓ Hafal</button>
     </div>
 
-    <div class="fc-actions">
+    <div class="fc-actions" id="fcRow2" style="gap: 8px;">
       <button class="toggle-btn" id="btnForget">🧠 Lupa kanji ini</button>
-      <button class="toggle-btn" id="btnResetAll">🗑 Lupakan semua hafalan</button>
+      <button class="toggle-btn" id="btnResetAll" style="color:var(--red);">🗑 Lupakan semua hafalan</button>
     </div>
 
-    <div class="fc-actions">
+    <div class="fc-actions" id="fcRow3" style="gap: 8px;">
       <button class="toggle-btn" id="btnUnhard">✖ Hapus dari sulit</button>
-      <button class="toggle-btn" id="btnClearHard">🗑 Hapus semua sulit</button>
+      <button class="toggle-btn" id="btnClearHard" style="color:var(--red);">🗑 Hapus semua sulit</button>
     </div>
+
+    <p class="kbd-hint" id="kbdHintCard">⌨ Pintasan: <kbd>Spasi</kbd> balik kartu · <kbd>→</kbd> selanjutnya · <kbd>S</kbd> sulit · <kbd>H</kbd> hafal</p>
 
     <div class="card done mt16" id="fcDone" hidden>
       <div class="big">🎉</div>
       <h2 class="section mt8">Sesi selesai!</h2>
-      <p class="muted small mt8" id="doneSummary"></p>
+      <p class="muted small mt8" id="doneSummary" style="font-weight:600; font-size: 14px;"></p>
       <button class="btn btn-orange btn-block mt16" id="btnHardOnly" hidden>↺ Ulangi kartu sulit (<span id="hardCount">0</span>)</button>
       <button class="btn btn-primary btn-block mt12" id="btnRestart">Mulai sesi baru</button>
     </div>
@@ -187,56 +423,58 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
 
   <!-- ====== DAFTAR ====== -->
   <section id="panelList" hidden>
-    <p class="small muted mt12">Ketuk baris untuk melihat contoh kalimat. Tanda ✓ hafal tersimpan otomatis di perangkatmu.</p>
+    <p class="small muted mt12" style="font-weight:600">Ketuk baris untuk contoh kalimat. Data tersimpan di perangkat.</p>
     <input type="search" class="search mt12" id="kanjiSearch" placeholder="Cari kanji / reading / arti…" aria-label="Cari kanji">
-    <div class="list mt12" id="kanjiList"></div>
+    <div class="list mt16" id="kanjiList"></div>
   </section>
 
   <!-- ====== KUIS ====== -->
   <section id="panelQuiz" hidden>
     <div class="card mt16" id="quizSetup">
-      <h2 class="section">❓ Kuis acak</h2>
-      <p class="small mt8">Mode soal kali ini: <b id="quizTypeLabel"></b><br><span class="muted">Mode &amp; soal diacak ulang setiap masuk menu kuis.</span></p>
-      <p class="small muted mt8">Sumber soal: <span id="quizPoolInfo"></span>. Pilihan jawaban dibuat mengecoh dari kata yang mirip.</p>
-      <p class="small mt12"><b>Pilih jumlah soal:</b></p>
+      <h2 class="section">❓ Kuis Acak</h2>
+      <p class="small mt12" style="line-height:1.6">Mode soal saat ini: <br><b id="quizTypeLabel" style="font-size:15px; color:var(--accent)"></b><br><span class="muted">Mode &amp; soal akan diacak ulang otomatis setiap masuk menu kuis.</span></p>
+      <p class="small muted mt8">Sumber soal: <span id="quizPoolInfo" style="font-weight:700"></span>. Pilihan mengecoh diambil dari kata yang mirip.</p>
+      <p class="small mt16"><b>Pilih jumlah soal:</b></p>
       <div class="quiz-counts mt8">
         <button class="btn btn-primary" data-count="10">10 soal</button>
         <button class="btn btn-primary" data-count="15">15 soal</button>
         <button class="btn btn-primary" data-count="20">20 soal</button>
       </div>
-      <p class="small muted mt8" id="quizCapNote"></p>
+      <p class="small muted mt12" id="quizCapNote" style="font-weight:600; color:var(--orange)"></p>
     </div>
 
     <div id="quizRun" hidden>
       <div class="row between mt12">
-        <span class="small muted" id="quizCounter">Soal 1</span>
-        <span class="lvl" id="quizModeBadge"></span>
+        <span class="small muted" id="quizCounter" style="font-weight:700">Soal 1</span>
+        <span class="lvl" id="quizModeBadge" style="margin-top:0; background:var(--accent-soft); color:var(--accent)"></span>
       </div>
-      <div class="bar mt8"><i id="quizBar"></i></div>
+      <div class="bar mt12"><i id="quizBar"></i></div>
       <div class="card quiz-card mt16">
-        <div class="small muted" id="quizPrompt"></div>
+        <div class="small muted" id="quizPrompt" style="font-weight:700; text-transform:uppercase; letter-spacing:1px; font-size:12px;"></div>
         <div class="quiz-main" id="quizMain"></div>
         <div class="quiz-sub muted" id="quizSub"></div>
       </div>
-      <div class="quiz-options mt12" id="quizOptions"></div>
+      <div class="quiz-options mt16" id="quizOptions"></div>
+      <p class="kbd-hint" id="kbdHintQuiz">⌨ Tekan <kbd>1</kbd>–<kbd>4</kbd> untuk memilih jawaban</p>
     </div>
 
     <div id="quizResult" class="mt16" hidden>
       <div class="card done">
         <div class="big" id="quizEmoji">🎉</div>
-        <h2 class="section mt8">Skor: <span class="score-num" id="quizScore">0</span></h2>
-        <p class="muted small mt8" id="quizScoreMsg"></p>
-        <p class="muted small mt8" id="quizScoreDetail"></p>
+        <h2 class="section mt8" style="font-size:18px; color:var(--muted)">Skor Akhir</h2>
+        <div class="score-num mt8" id="quizScore">0</div>
+        <p class="small mt12" id="quizScoreMsg" style="font-weight:700; font-size:16px"></p>
+        <p class="muted small mt8" id="quizScoreDetail" style="font-weight:600"></p>
       </div>
-      <div class="card mt12" id="quizWrongWrap" hidden>
-        <div class="section" style="font-size:15px">❌ Yang salah — cek perbaikannya</div>
-        <div class="quiz-review mt8" id="quizWrongList"></div>
+      <div class="mt16" id="quizWrongWrap" hidden>
+        <div class="section mb8" style="font-size:16px; margin-bottom:10px; color:var(--red);">❌ Perlu Diperbaiki</div>
+        <div class="quiz-review" id="quizWrongList"></div>
       </div>
-      <div class="card mt12" id="quizRightWrap" hidden>
-        <div class="section" style="font-size:15px">✅ Yang benar</div>
-        <div class="quiz-review mt8" id="quizRightList"></div>
+      <div class="mt16" id="quizRightWrap" hidden>
+        <div class="section mb8" style="font-size:16px; margin-bottom:10px; color:var(--green);">✅ Jawaban Benar</div>
+        <div class="quiz-review" id="quizRightList"></div>
       </div>
-      <button class="btn btn-primary btn-block mt16" id="btnQuizAgain">🔁 Kuis baru (mode &amp; soal diacak ulang)</button>
+      <button class="btn btn-primary btn-block mt16" id="btnQuizAgain" style="margin-bottom: 20px;">🔁 Kuis Baru (Acak Ulang)</button>
     </div>
   </section>
 
@@ -391,7 +629,7 @@ const KANJI = [
   {id:'n136', k:'湖', r:'みずうみ', m:'danau', ex:'湖でボートに乗りました。', exi:'Naik perahu di danau.', lv:'N4', dif:'hard'}
 ];
 
-/* ================= LOGIC ================= */
+/* ================= LOGIC (SAMA PERSIS DENGAN SEBELUMNYA) ================= */
 const $ = id => document.getElementById(id);
 const LS_KEY = 'n4kanji_mastered_v1';
 
@@ -417,7 +655,7 @@ let hideMastered = false;
 let order = [];
 let pos = 0;
 let flipped = false;
-let sessionHard = new Set();   // index dalam KANJI
+let sessionHard = new Set();   
 let sessionNewMaster = 0;
 
 function pool(){
@@ -489,11 +727,12 @@ function flip(){
 
 function updatePill(){
   const idx = pool();
-  $('mCount').textContent = idx.filter(i => mastered.has(KANJI[i].id)).length;
+  const mc = idx.filter(i => mastered.has(KANJI[i].id)).length;
+  $('mCount').textContent = mc;
+  $('btnResetAll').disabled = mc === 0;
   $('mTotal').textContent = idx.length;
 }
 
-/* --- level chips --- */
 function renderChips(){
   const keys = ['all', ...LEVEL_KEYS];
   $('levelChips').innerHTML = keys.map(key => {
@@ -517,7 +756,6 @@ $('levelChips').addEventListener('click', e => {
   if(!$('panelQuiz').hidden) enterQuizSetup();
 });
 
-/* --- events kartu --- */
 $('flashcard').addEventListener('click', flip);
 $('flashcard').addEventListener('keydown', e => {
   if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flip(); }
@@ -554,7 +792,7 @@ function updateHardBtn(){
   b.disabled = !hardMode && n === 0;
   const cur = KANJI[order[pos]];
   $('btnUnhard').disabled = !cur || !hardSet.has(cur.id);
-  $('btnClearHard').disabled = hardSet.size === 0;
+  $('btnClearHard').disabled = n === 0;
 }
 
 $('btnUnhard').addEventListener('click', () => {
@@ -566,8 +804,8 @@ $('btnUnhard').addEventListener('click', () => {
   updateHardBtn();
 });
 
-/* konfirmasi dua ketukan (confirm() sering diblokir di preview/iframe) */
 function confirmTap(btn, label, action){
+  const armedText = levelFilter === 'all' ? 'Yakin? Ketuk lagi' : 'Yakin? (level ' + LEVELS[levelFilter].label + ') ketuk lagi';
   if(btn.dataset.armed){
     clearTimeout(btn._t);
     delete btn.dataset.armed;
@@ -576,13 +814,13 @@ function confirmTap(btn, label, action){
     return;
   }
   btn.dataset.armed = '1';
-  btn.textContent = 'Yakin? Ketuk lagi';
+  btn.textContent = armedText;
   btn._t = setTimeout(() => { delete btn.dataset.armed; btn.textContent = label; }, 3000);
 }
 
 $('btnClearHard').addEventListener('click', () => {
   confirmTap($('btnClearHard'), '🗑 Hapus semua sulit', () => {
-    hardSet = new Set();
+    pool().forEach(i => hardSet.delete(KANJI[i].id));
     sessionHard = new Set();
     saveHard();
     updateHardBtn();
@@ -612,7 +850,7 @@ $('btnForget').addEventListener('click', () => {
 
 $('btnResetAll').addEventListener('click', () => {
   confirmTap($('btnResetAll'), '🗑 Lupakan semua hafalan', () => {
-    mastered = new Set();
+    pool().forEach(i => mastered.delete(KANJI[i].id));
     saveMastered();
     updatePill();
     renderList($('kanjiSearch').value);
@@ -713,7 +951,6 @@ function meaningSim(a, b){
   return n;
 }
 
-/* Distraktor mengecoh: dipilih dari kata yang PALING MIRIP, bukan acak polos */
 function pickDistractors(item, key, count){
   const scored = KANJI.filter(it => it.id !== item.id).map(it => {
     let s;
@@ -753,7 +990,7 @@ function enterQuizSetup(){
     if(c > n) capped.push(c);
   });
   $('quizCapNote').textContent = capped.length
-    ? 'Level "' + LEVELS[levelFilter].label + '" cuma punya ' + n + ' kata, jadi pilihan ' + capped.join(' & ') + ' soal dimatikan.'
+    ? 'Level "' + LEVELS[levelFilter].label + '" cuma punya ' + n + ' kata, jadi pilihan ' + capped.join(' & ') + ' dimatikan.'
     : '';
 }
 
@@ -787,7 +1024,7 @@ function renderQuizQ(){
   else if(t === 'r2k'){ main.textContent = q.item.r; main.classList.add('reading'); sub.textContent = ''; }
   else { main.textContent = q.item.k; sub.textContent = q.item.r; }
   const box = $('quizOptions');
-  box.className = 'quiz-options mt12' + (t === 'k2m' ? '' : ' two');
+  box.className = 'quiz-options mt16' + (t === 'k2m' ? '' : ' two');
   box.innerHTML = '';
   q.options.forEach(opt => {
     const b = document.createElement('button');
@@ -814,16 +1051,16 @@ function answerQuiz(btn, opt, q){
     quizPos++;
     if(quizPos < quizQuestions.length) renderQuizQ();
     else showQuizResult();
-  }, correct ? 350 : 800);
+  }, correct ? 450 : 800);
 }
 
 function reviewText(rec){
   const it = rec.item, t = rec.type, ch = rec.chosen;
   if(t === 'k2r')
-    return '<b class="k">' + it.k + '</b> — seharusnya dibaca <span class="right">' + it.r + '</span>, artinya "' + it.m + '".<br>Jawabanmu: <span class="you">' + ch.r + '</span> (= ' + ch.k + ', "' + ch.m + '")';
+    return '<b class="k">' + it.k + '</b> — seharusnya <span class="right">' + it.r + '</span>, arti "' + it.m + '".<br>Jawabanmu: <span class="you">' + ch.r + '</span> (= ' + ch.k + ', "' + ch.m + '")';
   if(t === 'r2k')
-    return 'Bacaan <b>' + it.r + '</b> — seharusnya <span class="right">' + it.k + '</span>, artinya "' + it.m + '".<br>Jawabanmu: <span class="you">' + ch.k + '</span> (dibaca ' + ch.r + ', "' + ch.m + '")';
-  return '<b class="k">' + it.k + '</b> (' + it.r + ') — artinya <span class="right">"' + it.m + '"</span>.<br>Jawabanmu: <span class="you">"' + ch.m + '"</span> (= ' + ch.k + ')';
+    return 'Bacaan <b>' + it.r + '</b> — seharusnya <span class="right">' + it.k + '</span>, arti "' + it.m + '".<br>Jawabanmu: <span class="you">' + ch.k + '</span> (dibaca ' + ch.r + ', "' + ch.m + '")';
+  return '<b class="k">' + it.k + '</b> (' + it.r + ') — arti <span class="right">"' + it.m + '"</span>.<br>Jawabanmu: <span class="you">"' + ch.m + '"</span> (= ' + ch.k + ')';
 }
 
 function showQuizResult(){
@@ -870,6 +1107,39 @@ function switchTab(which){
 $('tabCard').addEventListener('click', () => switchTab('card'));
 $('tabList').addEventListener('click', () => switchTab('list'));
 $('tabQuiz').addEventListener('click', () => switchTab('quiz'));
+
+
+/* --- pintasan keyboard (PC) --- */
+let kbNav = false;   // true jika terakhir kali pengguna berpindah fokus dengan Tab
+document.addEventListener('keydown', e => { if(e.key === 'Tab') kbNav = true; }, true);
+document.addEventListener('pointerdown', () => { kbNav = false; }, true);
+/* Spasi = balik kartu, kecuali fokusnya sengaja ada di tombol lewat keyboard (Tab) atau di kartu itu sendiri */
+function spaceFlips(t){
+  if(!t || t === $('flashcard')) return false;
+  if(t.tagName === 'BUTTON') return !kbNav;   // tombol yang baru diklik mouse tidak boleh ditekan ulang oleh Spasi
+  return true;
+}
+document.addEventListener('keyup', e => {
+  if(e.key === ' ' && !$('panelCard').hidden && $('fcActions').style.display !== 'none' && spaceFlips(e.target)) e.preventDefault();
+});
+document.addEventListener('keydown', e => {
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = e.target, tag = t && t.tagName;
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const key = e.key;
+  if(!$('panelCard').hidden){
+    if($('fcActions').style.display === 'none') return;   // sesi selesai
+    if(key === ' '){
+      if(!spaceFlips(t)) return;
+      e.preventDefault(); flip();
+    } else if(key === 'ArrowRight'){ e.preventDefault(); $('btnUlangi').click(); }
+    else if(key === 'h' || key === 'H'){ $('btnHafal').click(); }
+    else if(key === 's' || key === 'S'){ $('btnSulit').click(); }
+  } else if(!$('panelQuiz').hidden && !$('quizRun').hidden && /^[1-9]$/.test(key)){
+    const opt = $('quizOptions').querySelectorAll('.opt')[Number(key) - 1];
+    if(opt && !opt.disabled) opt.click();
+  }
+});
 
 /* --- init --- */
 renderChips();
