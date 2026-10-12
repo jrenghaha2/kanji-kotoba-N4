@@ -57,6 +57,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
 .btn-block{width:100%}
 .toggle-btn{border:0;background:var(--surface);box-shadow:var(--shadow);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit}
 .toggle-btn.on{color:var(--accent)}
+.toggle-btn[disabled]{opacity:.4;cursor:not-allowed}
 /* flashcard */
 .flash-wrap{perspective:1200px;margin-top:16px}
 .flashcard{position:relative;width:100%;height:340px;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.2,.7,.3,1);cursor:pointer}
@@ -135,9 +136,13 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
   <section id="panelCard">
     <div class="row between mt12">
       <span class="small muted" id="cardCounter">Kartu 1</span>
-      <button class="toggle-btn" id="btnShuffle">🔀 Acak: mati</button>
+      <div class="row" style="gap:6px">
+        <button class="toggle-btn" id="btnHideMastered">🙈 Sembunyikan hafal: mati</button>
+        <button class="toggle-btn" id="btnShuffle">🔀 Acak: mati</button>
+      </div>
     </div>
     <div class="bar mt8"><i id="cardBar"></i></div>
+    <button class="toggle-btn mt8" id="btnHardMode" style="width:100%">⚠ Kartu sulit (0)</button>
 
     <div class="flash-wrap" id="flashWrap">
       <div class="flashcard" id="flashcard" role="button" tabindex="0" aria-label="Kartu kanji, ketuk untuk membalik">
@@ -155,9 +160,15 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
       </div>
     </div>
 
-    <div class="fc-actions" id="fcActions">
-      <button class="btn btn-orange" id="btnUlangi">↺ Ulangi</button>
+    <div class="fc-actions" id="fcActions" style="grid-template-columns:1fr 1fr 1fr">
+      <button class="btn btn-primary" id="btnUlangi">Selanjutnya →</button>
+      <button class="btn btn-orange" id="btnSulit">⚠ Sulit</button>
       <button class="btn btn-green" id="btnHafal">✓ Hafal</button>
+    </div>
+
+    <div class="fc-actions">
+      <button class="toggle-btn" id="btnForget">🧠 Lupa kanji ini</button>
+      <button class="toggle-btn" id="btnResetAll">🗑 Lupakan semua hafalan</button>
     </div>
 
     <div class="card done mt16" id="fcDone" hidden>
@@ -389,9 +400,15 @@ const LEVEL_KEYS = ['easy','medium','hard'];
 let levelFilter = 'all';
 
 let mastered = new Set(JSON.parse(localStorage.getItem(LS_KEY) || '[]'));
+const HARD_KEY = 'n4kanji_hard_v1';
+let hardSet = new Set(JSON.parse(localStorage.getItem(HARD_KEY) || '[]'));
+const saveHard = () => localStorage.setItem(HARD_KEY, JSON.stringify([...hardSet]));
+let hardMode = false;
+
 const saveMastered = () => localStorage.setItem(LS_KEY, JSON.stringify([...mastered]));
 
 let shuffleOn = false;
+let hideMastered = false;
 let order = [];
 let pos = 0;
 let flipped = false;
@@ -400,6 +417,10 @@ let sessionNewMaster = 0;
 
 function pool(){
   return KANJI.map((_, i) => i).filter(i => levelFilter === 'all' || KANJI[i].dif === levelFilter);
+}
+
+function cardPool(){
+  return pool().filter(i => (!hideMastered || !mastered.has(KANJI[i].id)) && (!hardMode || hardSet.has(KANJI[i].id)));
 }
 
 function shuffled(arr){
@@ -438,6 +459,8 @@ function renderCard(){
   badge.className = 'lvl ' + LEVELS[item.dif].cls;
   $('cardCounter').textContent = 'Kartu ' + (pos + 1) + ' dari ' + total;
   $('cardBar').style.width = (pos / total * 100) + '%';
+  updateForgetBtn();
+  updateHardBtn();
 }
 
 function endSession(){
@@ -445,9 +468,13 @@ function endSession(){
   $('fcActions').style.display = 'none';
   $('fcDone').hidden = false;
   $('cardBar').style.width = '100%';
-  $('doneSummary').textContent = order.length + ' kartu diulas · ' + sessionNewMaster + ' hafal baru · ' + sessionHard.size + ' ditandai sulit';
+  $('doneSummary').textContent = order.length === 0
+    ? (hardMode ? 'Belum ada kanji sulit di level ini' : 'Semua kanji di level ini sudah hafal 🎉')
+    : order.length + ' kartu diulas · ' + sessionNewMaster + ' hafal baru · ' + sessionHard.size + ' ditandai sulit';
   $('btnHardOnly').hidden = sessionHard.size === 0;
   $('hardCount').textContent = sessionHard.size;
+  updateForgetBtn();
+  updateHardBtn();
 }
 
 function flip(){
@@ -481,7 +508,7 @@ $('levelChips').addEventListener('click', e => {
   renderChips();
   updatePill();
   renderList($('kanjiSearch').value);
-  buildOrder(pool());
+  buildOrder(cardPool());
   if(!$('panelQuiz').hidden) enterQuizSetup();
 });
 
@@ -499,12 +526,65 @@ $('btnHafal').addEventListener('click', () => {
     saveMastered();
     updatePill();
   }
+  if(hardSet.delete(item.id)) saveHard();
   pos++; renderCard();
 });
 
 $('btnUlangi').addEventListener('click', () => {
-  sessionHard.add(order[pos]);
   pos++; renderCard();
+});
+
+$('btnSulit').addEventListener('click', () => {
+  sessionHard.add(order[pos]);
+  hardSet.add(KANJI[order[pos]].id);
+  saveHard();
+  pos++; renderCard();
+});
+
+function updateHardBtn(){
+  const n = pool().filter(i => hardSet.has(KANJI[i].id)).length;
+  const b = $('btnHardMode');
+  b.textContent = '⚠ Kartu sulit (' + n + ')' + (hardMode ? ': nyala' : '');
+  b.classList.toggle('on', hardMode);
+  b.disabled = !hardMode && n === 0;
+}
+
+$('btnHardMode').addEventListener('click', () => {
+  hardMode = !hardMode;
+  sessionHard = new Set();
+  buildOrder(cardPool());
+});
+
+function updateForgetBtn(){
+  const item = KANJI[order[pos]];
+  $('btnForget').disabled = !item || !mastered.has(item.id);
+}
+
+$('btnForget').addEventListener('click', () => {
+  const item = KANJI[order[pos]];
+  if(!item || !mastered.has(item.id)) return;
+  mastered.delete(item.id);
+  saveMastered();
+  updatePill();
+  renderList($('kanjiSearch').value);
+  updateForgetBtn();
+});
+
+$('btnResetAll').addEventListener('click', () => {
+  if(!confirm('Lupakan semua kanji yang sudah dihafal? Tindakan ini tidak bisa dibatalkan.')) return;
+  mastered = new Set();
+  saveMastered();
+  updatePill();
+  renderList($('kanjiSearch').value);
+  updateForgetBtn();
+});
+
+$('btnHideMastered').addEventListener('click', () => {
+  hideMastered = !hideMastered;
+  $('btnHideMastered').textContent = '🙈 Sembunyikan hafal: ' + (hideMastered ? 'nyala' : 'mati');
+  $('btnHideMastered').classList.toggle('on', hideMastered);
+  sessionHard = new Set();
+  buildOrder(cardPool());
 });
 
 $('btnShuffle').addEventListener('click', () => {
@@ -512,12 +592,12 @@ $('btnShuffle').addEventListener('click', () => {
   $('btnShuffle').textContent = '🔀 Acak: ' + (shuffleOn ? 'nyala' : 'mati');
   $('btnShuffle').classList.toggle('on', shuffleOn);
   sessionHard = new Set();
-  buildOrder(pool());
+  buildOrder(cardPool());
 });
 
 $('btnRestart').addEventListener('click', () => {
   sessionHard = new Set();
-  buildOrder(pool());
+  buildOrder(cardPool());
 });
 
 $('btnHardOnly').addEventListener('click', () => {
@@ -754,7 +834,7 @@ $('tabQuiz').addEventListener('click', () => switchTab('quiz'));
 renderChips();
 updatePill();
 renderList('');
-buildOrder(pool());
+buildOrder(cardPool());
 </script>
 </body>
 </html>
