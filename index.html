@@ -171,6 +171,11 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justif
       <button class="toggle-btn" id="btnResetAll">🗑 Lupakan semua hafalan</button>
     </div>
 
+    <div class="fc-actions">
+      <button class="toggle-btn" id="btnUnhard">✖ Hapus dari sulit</button>
+      <button class="toggle-btn" id="btnClearHard">🗑 Hapus semua sulit</button>
+    </div>
+
     <div class="card done mt16" id="fcDone" hidden>
       <div class="big">🎉</div>
       <h2 class="section mt8">Sesi selesai!</h2>
@@ -547,7 +552,42 @@ function updateHardBtn(){
   b.textContent = '⚠ Kartu sulit (' + n + ')' + (hardMode ? ': nyala' : '');
   b.classList.toggle('on', hardMode);
   b.disabled = !hardMode && n === 0;
+  const cur = KANJI[order[pos]];
+  $('btnUnhard').disabled = !cur || !hardSet.has(cur.id);
+  $('btnClearHard').disabled = hardSet.size === 0;
 }
+
+$('btnUnhard').addEventListener('click', () => {
+  const cur = KANJI[order[pos]];
+  if(!cur || !hardSet.has(cur.id)) return;
+  hardSet.delete(cur.id);
+  sessionHard.delete(order[pos]);
+  saveHard();
+  updateHardBtn();
+});
+
+/* konfirmasi dua ketukan (confirm() sering diblokir di preview/iframe) */
+function confirmTap(btn, label, action){
+  if(btn.dataset.armed){
+    clearTimeout(btn._t);
+    delete btn.dataset.armed;
+    btn.textContent = label;
+    action();
+    return;
+  }
+  btn.dataset.armed = '1';
+  btn.textContent = 'Yakin? Ketuk lagi';
+  btn._t = setTimeout(() => { delete btn.dataset.armed; btn.textContent = label; }, 3000);
+}
+
+$('btnClearHard').addEventListener('click', () => {
+  confirmTap($('btnClearHard'), '🗑 Hapus semua sulit', () => {
+    hardSet = new Set();
+    sessionHard = new Set();
+    saveHard();
+    updateHardBtn();
+  });
+});
 
 $('btnHardMode').addEventListener('click', () => {
   hardMode = !hardMode;
@@ -571,12 +611,13 @@ $('btnForget').addEventListener('click', () => {
 });
 
 $('btnResetAll').addEventListener('click', () => {
-  if(!confirm('Lupakan semua kanji yang sudah dihafal? Tindakan ini tidak bisa dibatalkan.')) return;
-  mastered = new Set();
-  saveMastered();
-  updatePill();
-  renderList($('kanjiSearch').value);
-  updateForgetBtn();
+  confirmTap($('btnResetAll'), '🗑 Lupakan semua hafalan', () => {
+    mastered = new Set();
+    saveMastered();
+    updatePill();
+    renderList($('kanjiSearch').value);
+    updateForgetBtn();
+  });
 });
 
 $('btnHideMastered').addEventListener('click', () => {
