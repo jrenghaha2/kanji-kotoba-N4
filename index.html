@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; media-src 'self' https: data: blob:;">
 <meta name="theme-color" content="#6366f1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -12,6 +12,7 @@
 <style>
 /* ================= DESAIN UI / UX BARU ================= */
 :root {
+  /* Palet warna yang lebih kaya dan organik */
   --bg-grad: linear-gradient(135deg, #f3f6f9 0%, #e2e8f0 100%);
   --surface: rgba(255, 255, 255, 0.95);
   --surface-solid: #ffffff;
@@ -19,20 +20,21 @@
   --text: #0f172a;
   --muted: #64748b;
   
-  --accent: #6366f1;
+  --accent: #6366f1; /* Indigo modern */
   --accent-hover: #4f46e5;
   --accent-soft: #e0e7ff;
   
-  --green: #10b981;
+  --green: #10b981; /* Emerald */
   --green-soft: #d1fae5;
   --blue: #3b82f6;
   --blue-soft: #dbeafe;
   --orange: #f59e0b;
   --orange-soft: #fef3c7;
-  --red: #f43f5e;
+  --red: #f43f5e; /* Rose / Red */
   --red-soft: #ffe4e6;
   
   --radius: 20px;
+  /* Bayangan berlapis untuk kedalaman */
   --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
   --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
   --shadow-hover: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
@@ -1027,6 +1029,7 @@ $('kanjiList').addEventListener('click', e => {
   if(item) item.classList.toggle('open');
 });
 
+/* ================= KUIS ================= */
 const QTYPES = [
   {key:'k2r', label:'Kanji → Cara baca', prompt:'Pilih cara baca yang benar untuk:'},
   {key:'r2k', label:'Hiragana → Kanji', prompt:'Pilih kanji yang cocok untuk bacaan:'},
@@ -1251,23 +1254,79 @@ document.addEventListener('keydown', e => {
   }
 });
 
-/* ================= FITUR TAMBAHAN (REKOMENDASI 1 - 4) ================= */
+/* ================= FITUR TAMBAHAN (REKOMENDASI 1 - 4 + PC AUDIO FIX) ================= */
 
-/* 1. Web Speech API (Text-to-Speech Bahasa Jepang) */
+/* 1. Web Speech API (Text-to-Speech Bahasa Jepang + Fallback PC) */
+let cachedVoices = [];
+function loadVoices(){
+  if('speechSynthesis' in window){
+    cachedVoices = window.speechSynthesis.getVoices() || [];
+  }
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  if(window.speechSynthesis.onvoiceschanged !== undefined){
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+}
+
+let fallbackAudio = null;
+function playOnlineTTSFallback(text){
+  try {
+    if(fallbackAudio){
+      fallbackAudio.pause();
+      fallbackAudio = null;
+    }
+    const url = 'https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=ja&dt=t&q=' + encodeURIComponent(text);
+    fallbackAudio = new Audio(url);
+    fallbackAudio.playbackRate = 0.95;
+    fallbackAudio.play().catch(() => {});
+  } catch(e) {}
+}
+
+let activeUtterance = null;
 function speakJP(text){
+  if(!text) return;
   if(!('speechSynthesis' in window)){
-    alert('Maaf, browser perangkat ini belum mendukung fitur suara (Text-to-Speech).');
+    playOnlineTTSFallback(text);
     return;
   }
-  if(!text) return;
+
+  loadVoices();
+  const jpVoice = cachedVoices.find(v => v.lang && (v.lang.toLowerCase().includes('ja') || v.lang.toLowerCase().includes('jp')));
+
+  /* Jika di PC sama sekali belum terinstal voice Bahasa Jepang, gunakan fallback online atau tetap paksa lang ja-JP */
   window.speechSynthesis.cancel();
+  if(window.speechSynthesis.paused){
+    window.speechSynthesis.resume();
+  }
+
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'ja-JP';
   u.rate = 0.9;
-  const voices = window.speechSynthesis.getVoices();
-  const jpVoice = voices.find(v => v.lang && (v.lang.includes('ja') || v.lang.includes('JP')));
   if(jpVoice) u.voice = jpVoice;
-  window.speechSynthesis.speak(u);
+
+  /* Simpan ke variabel global agar tidak terkena Garbage Collection di Chrome PC */
+  activeUtterance = u;
+
+  let started = false;
+  u.onstart = () => { started = true; };
+  u.onerror = () => {
+    if(!started) playOnlineTTSFallback(text);
+  };
+
+  /* Delay 50ms diperlukan di Chrome/Edge PC setelah .cancel() */
+  setTimeout(() => {
+    window.speechSynthesis.speak(u);
+    /* Jika setelah 600ms di PC tidak ada voice Jepang dan tidak bersuara, putar fallback online */
+    if(!jpVoice){
+      setTimeout(() => {
+        if(!started && !window.speechSynthesis.speaking){
+          playOnlineTTSFallback(text);
+        }
+      }, 600);
+    }
+  }, 50);
 }
 
 function speakCurrentCard(useExample){
@@ -1290,6 +1349,7 @@ $('btnSpeakEx').addEventListener('click', e => {
   speakCurrentCard(true);
 });
 
+/* Pintasan keyboard [A] untuk mendengar pelafalan */
 document.addEventListener('keydown', e => {
   if(e.ctrlKey || e.metaKey || e.altKey) return;
   const t = e.target, tag = t && t.tagName;
