@@ -3,11 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';">
+<meta name="theme-color" content="#6366f1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="./manifest.json">
 <title>N4 Kanji — Flashcard per Level</title>
 <style>
 /* ================= DESAIN UI / UX BARU ================= */
 :root {
-  /* Palet warna yang lebih kaya dan organik */
   --bg-grad: linear-gradient(135deg, #f3f6f9 0%, #e2e8f0 100%);
   --surface: rgba(255, 255, 255, 0.95);
   --surface-solid: #ffffff;
@@ -15,21 +19,20 @@
   --text: #0f172a;
   --muted: #64748b;
   
-  --accent: #6366f1; /* Indigo modern */
+  --accent: #6366f1;
   --accent-hover: #4f46e5;
   --accent-soft: #e0e7ff;
   
-  --green: #10b981; /* Emerald */
+  --green: #10b981;
   --green-soft: #d1fae5;
   --blue: #3b82f6;
   --blue-soft: #dbeafe;
   --orange: #f59e0b;
   --orange-soft: #fef3c7;
-  --red: #f43f5e; /* Rose / Red */
+  --red: #f43f5e;
   --red-soft: #ffe4e6;
   
   --radius: 20px;
-  /* Bayangan berlapis untuk kedalaman */
   --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
   --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
   --shadow-hover: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
@@ -130,6 +133,7 @@ section:not([hidden]) { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1
 .btn-green { background: linear-gradient(135deg, var(--green), #059669); color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); }
 .btn-orange { background: linear-gradient(135deg, var(--orange), #d97706); color: #fff; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25); }
 .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: #fff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25); }
+.btn-secondary { background: var(--surface-solid); color: var(--text); border: 1px solid rgba(0,0,0,0.08); box-shadow: var(--shadow-sm); }
 .btn-block { width: 100%; }
 
 .toggle-btn { border: 1px solid rgba(0,0,0,0.04); background: var(--surface-solid); box-shadow: var(--shadow-sm); border-radius: 12px; padding: 10px 14px; font-size: 13.5px; font-weight: 700; color: var(--muted); cursor: pointer; font-family: inherit; transition: all 0.2s; }
@@ -168,6 +172,7 @@ section:not([hidden]) { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1
 .example-id { font-size: 14px; color: var(--muted); margin-top: 10px; line-height: 1.5; font-weight: 500; }
 
 .fc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+.fc-nav-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; grid-column: 1 / -1; }
 
 /* --- State Selesai --- */
 .done { text-align: center; padding: 32px 20px; background: linear-gradient(135deg, #ffffff, #fdfbfb); }
@@ -346,13 +351,88 @@ section:not([hidden]) { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1
   #panelCard:not([hidden]){grid-template-columns:minmax(0,1fr) 380px}
 }
 @media (prefers-reduced-motion: reduce){ *{animation:none !important;transition:none !important} }
+
+/* ================= FITUR TAMBAHAN (AUDIO & BACKUP/RESTORE) ================= */
+.appbar-actions { display: flex; align-items: center; gap: 6px; }
+.icon-pill-btn {
+  border: 1px solid rgba(0,0,0,0.05);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-sm);
+  border-radius: 999px;
+  padding: 6px 11px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.icon-pill-btn:hover { color: var(--accent); border-color: var(--accent-soft); transform: translateY(-1px); box-shadow: var(--shadow); }
+.icon-pill-btn:active { transform: scale(0.95); }
+
+.tts-card-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: var(--surface-solid);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.tts-card-btn:hover { background: var(--accent-soft); transform: scale(1.04); }
+.tts-card-btn:active { transform: scale(0.94); }
+
+.tts-inline-btn {
+  border: 0;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 8px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.tts-inline-btn:hover { background: var(--accent); color: #fff; }
+.tts-inline-btn:active { transform: scale(0.93); }
+
+@media (max-width: 440px) {
+  .icon-pill-btn span.lbl-txt { display: none; }
+  .icon-pill-btn { padding: 6px 9px; }
+}
 </style>
 </head>
 <body>
 <div class="phone">
   <header class="appbar">
     <div class="brand"><span class="logo">日</span> N4 Kanji</div>
-    <span class="pill">✓ <b id="mCount">0</b>/<span id="mTotal">0</span> hafal</span>
+    <div class="appbar-actions">
+      <button type="button" class="icon-pill-btn" id="btnExportData" title="Backup / Unduh progres belajar (.json)">💾 <span class="lbl-txt">Backup</span></button>
+      <button type="button" class="icon-pill-btn" id="btnImportData" title="Restore / Pulihkan progres belajar (.json)">📂 <span class="lbl-txt">Restore</span></button>
+      <input type="file" id="fileImportData" accept=".json,application/json" hidden>
+      <span class="pill">✓ <b id="mCount">0</b>/<span id="mTotal">0</span> hafal</span>
+    </div>
   </header>
 
   <div class="sidebar">
@@ -381,21 +461,26 @@ section:not([hidden]) { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1
     <div class="flash-wrap" id="flashWrap">
       <div class="flashcard" id="flashcard" role="button" tabindex="0" aria-label="Kartu kanji, ketuk untuk membalik">
         <div class="face front">
+          <button type="button" class="tts-card-btn" id="btnSpeakFront" title="Dengarkan pelafalan kata (Pintasan: A)">🔊 Suara</button>
           <div class="kanji-big" id="cardKanji">漢字</div>
           <div class="hint">Ketuk kartu untuk membalik</div>
         </div>
         <div class="face back">
+          <button type="button" class="tts-card-btn" id="btnSpeakBack" title="Dengarkan pelafalan kata (Pintasan: A)">🔊 Kata</button>
           <div class="reading" id="cardReading"></div>
           <div class="meaning" id="cardMeaning"></div>
           <span class="lvl" id="cardLevel">Easy</span>
-          <div class="example" id="cardExample"></div>
+          <div class="example"><span id="cardExample"></span> <button type="button" class="tts-inline-btn" id="btnSpeakEx" title="Dengarkan contoh kalimat">🔊 Kalimat</button></div>
           <div class="example-id" id="cardExampleId"></div>
         </div>
       </div>
     </div>
 
-    <div class="fc-actions" id="fcActions" style="grid-template-columns:1fr 1fr 1fr; gap: 8px;">
-      <button class="btn btn-primary" id="btnUlangi">Selanjutnya →</button>
+    <div class="fc-actions" id="fcActions" style="grid-template-columns:1fr 1fr; gap: 8px;">
+      <div class="fc-nav-pair">
+        <button class="btn btn-secondary" id="btnPrev">← Sebelumnya</button>
+        <button class="btn btn-primary" id="btnUlangi">Selanjutnya →</button>
+      </div>
       <button class="btn btn-orange" id="btnSulit">⚠ Sulit</button>
       <button class="btn btn-green" id="btnHafal">✓ Hafal</button>
     </div>
@@ -410,7 +495,7 @@ section:not([hidden]) { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1
       <button class="toggle-btn" id="btnClearHard" style="color:var(--red);">🗑 Hapus semua sulit</button>
     </div>
 
-    <p class="kbd-hint" id="kbdHintCard">⌨ Pintasan: <kbd>Spasi</kbd> balik kartu · <kbd>→</kbd> selanjutnya · <kbd>S</kbd> sulit · <kbd>H</kbd> hafal</p>
+    <p class="kbd-hint" id="kbdHintCard">⌨ Pintasan: <kbd>Spasi</kbd> balik kartu · <kbd>←</kbd> sebelumnya · <kbd>→</kbd> selanjutnya · <kbd>S</kbd> sulit · <kbd>H</kbd> hafal · <kbd>A</kbd> suara</p>
 
     <div class="card done mt16" id="fcDone" hidden>
       <div class="big">🎉</div>
@@ -482,7 +567,6 @@ section:not([hidden]) { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1
 </div>
 
 <script>
-/* Data diurutkan dari yang paling sering muncul (easy) ke yang paling jarang (hard) */
 const KANJI = [
   {id:'n7', k:'予定', r:'よてい', m:'rencana, jadwal', ex:'明日の予定を教えてください。', exi:'Tolong beri tahu jadwal besok.', lv:'N4', dif:'easy'},
   {id:'n8', k:'約束', r:'やくそく', m:'janji', ex:'友達と約束があります。', exi:'Ada janji dengan teman.', lv:'N4', dif:'easy'},
@@ -629,7 +713,6 @@ const KANJI = [
   {id:'n136', k:'湖', r:'みずうみ', m:'danau', ex:'湖でボートに乗りました。', exi:'Naik perahu di danau.', lv:'N4', dif:'hard'}
 ];
 
-/* ================= LOGIC (SAMA PERSIS DENGAN SEBELUMNYA) ================= */
 const $ = id => document.getElementById(id);
 const LS_KEY = 'n4kanji_mastered_v1';
 
@@ -642,9 +725,21 @@ const LEVELS = {
 const LEVEL_KEYS = ['easy','medium','hard'];
 let levelFilter = 'all';
 
-let mastered = new Set(JSON.parse(localStorage.getItem(LS_KEY) || '[]'));
+function safeLoadSet(key){
+  try {
+    const raw = localStorage.getItem(key);
+    if(!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    if(!Array.isArray(parsed)) return new Set();
+    const validIds = new Set(KANJI.map(it => it.id));
+    return new Set(parsed.filter(id => typeof id === 'string' && validIds.has(id)));
+  } catch(e) {
+    return new Set();
+  }
+}
+let mastered = safeLoadSet(LS_KEY);
 const HARD_KEY = 'n4kanji_hard_v1';
-let hardSet = new Set(JSON.parse(localStorage.getItem(HARD_KEY) || '[]'));
+let hardSet = safeLoadSet(HARD_KEY);
 const saveHard = () => localStorage.setItem(HARD_KEY, JSON.stringify([...hardSet]));
 let hardMode = false;
 
@@ -702,6 +797,7 @@ function renderCard(){
   badge.className = 'lvl ' + LEVELS[item.dif].cls;
   $('cardCounter').textContent = 'Kartu ' + (pos + 1) + ' dari ' + total;
   $('cardBar').style.width = (pos / total * 100) + '%';
+  $('btnPrev').disabled = pos <= 0;
   updateForgetBtn();
   updateHardBtn();
 }
@@ -771,6 +867,10 @@ $('btnHafal').addEventListener('click', () => {
   }
   if(hardSet.delete(item.id)) saveHard();
   pos++; renderCard();
+});
+
+$('btnPrev').addEventListener('click', () => {
+  if(pos > 0){ pos--; renderCard(); }
 });
 
 $('btnUlangi').addEventListener('click', () => {
@@ -885,35 +985,48 @@ $('btnHardOnly').addEventListener('click', () => {
   buildOrder(hardIdx);
 });
 
-/* --- events daftar --- */
 function renderList(q){
   q = (q || '').trim().toLowerCase();
   const items = KANJI.filter(it =>
     (levelFilter === 'all' || it.dif === levelFilter) &&
     (!q || it.k.includes(q) || it.r.includes(q) ||
      it.m.toLowerCase().includes(q) || it.exi.toLowerCase().includes(q)));
-  $('kanjiList').innerHTML = items.length ? items.map(it =>
+  const listEl = $('kanjiList');
+  if(!items.length){
+    listEl.textContent = '';
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'empty';
+    emptyDiv.textContent = 'Tidak ada hasil untuk "' + q + '".';
+    listEl.appendChild(emptyDiv);
+    return;
+  }
+  listEl.innerHTML = items.map(it =>
     '<div class="item" data-id="' + it.id + '">' +
       '<div class="top">' +
         '<div class="k">' + it.k + '</div>' +
-        '<div class="info"><b>' + it.r + '</b><span>' + it.m + '</span></div>' +
+        '<div class="info"><b>' + it.r + ' <button type="button" class="tts-inline-btn" data-speak="' + it.r + '" title="Dengarkan kata">🔊</button></b><span>' + it.m + '</span></div>' +
         '<div class="tags">' +
           '<span class="tag ' + LEVELS[it.dif].cls + '">' + LEVELS[it.dif].label + '</span>' +
           (mastered.has(it.id) ? '<span class="tag green">✓ hafal</span>' : '') +
         '</div>' +
       '</div>' +
-      '<div class="ex">' + it.ex + '<div class="id">' + it.exi + '</div></div>' +
+      '<div class="ex">' + it.ex + ' <button type="button" class="tts-inline-btn" data-speak="' + it.ex + '" title="Dengarkan kalimat">🔊 Kalimat</button><div class="id">' + it.exi + '</div></div>' +
     '</div>'
-  ).join('') : '<div class="empty">Tidak ada hasil untuk "' + q + '".</div>';
+  ).join('');
 }
 
 $('kanjiSearch').addEventListener('input', e => renderList(e.target.value));
 $('kanjiList').addEventListener('click', e => {
+  const speakBtn = e.target.closest('[data-speak]');
+  if(speakBtn){
+    e.stopPropagation();
+    speakJP(speakBtn.dataset.speak);
+    return;
+  }
   const item = e.target.closest('.item');
   if(item) item.classList.toggle('open');
 });
 
-/* ================= KUIS ================= */
 const QTYPES = [
   {key:'k2r', label:'Kanji → Cara baca', prompt:'Pilih cara baca yang benar untuk:'},
   {key:'r2k', label:'Hiragana → Kanji', prompt:'Pilih kanji yang cocok untuk bacaan:'},
@@ -1094,7 +1207,6 @@ function showQuizResult(){
 
 $('btnQuizAgain').addEventListener('click', enterQuizSetup);
 
-/* --- tab --- */
 function switchTab(which){
   const tabs = { card:['tabCard','panelCard'], list:['tabList','panelList'], quiz:['tabQuiz','panelQuiz'] };
   Object.entries(tabs).forEach(([k, [t, p]]) => {
@@ -1108,15 +1220,12 @@ $('tabCard').addEventListener('click', () => switchTab('card'));
 $('tabList').addEventListener('click', () => switchTab('list'));
 $('tabQuiz').addEventListener('click', () => switchTab('quiz'));
 
-
-/* --- pintasan keyboard (PC) --- */
-let kbNav = false;   // true jika terakhir kali pengguna berpindah fokus dengan Tab
+let kbNav = false;
 document.addEventListener('keydown', e => { if(e.key === 'Tab') kbNav = true; }, true);
 document.addEventListener('pointerdown', () => { kbNav = false; }, true);
-/* Spasi = balik kartu, kecuali fokusnya sengaja ada di tombol lewat keyboard (Tab) atau di kartu itu sendiri */
 function spaceFlips(t){
   if(!t || t === $('flashcard')) return false;
-  if(t.tagName === 'BUTTON') return !kbNav;   // tombol yang baru diklik mouse tidak boleh ditekan ulang oleh Spasi
+  if(t.tagName === 'BUTTON') return !kbNav;
   return true;
 }
 document.addEventListener('keyup', e => {
@@ -1128,11 +1237,12 @@ document.addEventListener('keydown', e => {
   if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
   const key = e.key;
   if(!$('panelCard').hidden){
-    if($('fcActions').style.display === 'none') return;   // sesi selesai
+    if($('fcActions').style.display === 'none') return;
     if(key === ' '){
       if(!spaceFlips(t)) return;
       e.preventDefault(); flip();
-    } else if(key === 'ArrowRight'){ e.preventDefault(); $('btnUlangi').click(); }
+    } else if(key === 'ArrowLeft'){ e.preventDefault(); $('btnPrev').click(); }
+    else if(key === 'ArrowRight'){ e.preventDefault(); $('btnUlangi').click(); }
     else if(key === 'h' || key === 'H'){ $('btnHafal').click(); }
     else if(key === 's' || key === 'S'){ $('btnSulit').click(); }
   } else if(!$('panelQuiz').hidden && !$('quizRun').hidden && /^[1-9]$/.test(key)){
@@ -1140,6 +1250,141 @@ document.addEventListener('keydown', e => {
     if(opt && !opt.disabled) opt.click();
   }
 });
+
+/* ================= FITUR TAMBAHAN (REKOMENDASI 1 - 4) ================= */
+
+/* 1. Web Speech API (Text-to-Speech Bahasa Jepang) */
+function speakJP(text){
+  if(!('speechSynthesis' in window)){
+    alert('Maaf, browser perangkat ini belum mendukung fitur suara (Text-to-Speech).');
+    return;
+  }
+  if(!text) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ja-JP';
+  u.rate = 0.9;
+  const voices = window.speechSynthesis.getVoices();
+  const jpVoice = voices.find(v => v.lang && (v.lang.includes('ja') || v.lang.includes('JP')));
+  if(jpVoice) u.voice = jpVoice;
+  window.speechSynthesis.speak(u);
+}
+
+function speakCurrentCard(useExample){
+  if(pos >= order.length) return;
+  const item = KANJI[order[pos]];
+  if(!item) return;
+  speakJP(useExample ? item.ex : item.r);
+}
+
+$('btnSpeakFront').addEventListener('click', e => {
+  e.stopPropagation();
+  speakCurrentCard(false);
+});
+$('btnSpeakBack').addEventListener('click', e => {
+  e.stopPropagation();
+  speakCurrentCard(false);
+});
+$('btnSpeakEx').addEventListener('click', e => {
+  e.stopPropagation();
+  speakCurrentCard(true);
+});
+
+document.addEventListener('keydown', e => {
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = e.target, tag = t && t.tagName;
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if(!$('panelCard').hidden && $('fcActions').style.display !== 'none'){
+    if(e.key === 'a' || e.key === 'A'){
+      e.preventDefault();
+      speakCurrentCard(false);
+    }
+  }
+});
+
+/* 2. Backup & Restore Progres Belajar (Export / Import JSON) */
+$('btnExportData').addEventListener('click', () => {
+  try {
+    const payload = {
+      app: 'n4-kanji-kotoba',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      mastered: [...mastered],
+      hard: [...hardSet]
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'backup-kanji-n4-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(err) {
+    alert('Gagal membuat file backup.');
+  }
+});
+
+$('btnImportData').addEventListener('click', () => {
+  $('fileImportData').value = '';
+  $('fileImportData').click();
+});
+
+$('fileImportData').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  if(file.size > 1024 * 1024){
+    alert('Ukuran file terlalu besar (Maksimal 1MB).');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if(!data || typeof data !== 'object' || Array.isArray(data)){
+        throw new Error('Format JSON tidak valid.');
+      }
+      const validIds = new Set(KANJI.map(it => it.id));
+      let importedMastered = [];
+      let importedHard = [];
+
+      if(Array.isArray(data.mastered) || Array.isArray(data.hard)){
+        if(Array.isArray(data.mastered)) importedMastered = data.mastered.filter(id => typeof id === 'string' && validIds.has(id));
+        if(Array.isArray(data.hard)) importedHard = data.hard.filter(id => typeof id === 'string' && validIds.has(id));
+      } else {
+        if(typeof data[LS_KEY] === 'string'){
+          const m = JSON.parse(data[LS_KEY]);
+          if(Array.isArray(m)) importedMastered = m.filter(id => typeof id === 'string' && validIds.has(id));
+        }
+        if(typeof data[HARD_KEY] === 'string'){
+          const h = JSON.parse(data[HARD_KEY]);
+          if(Array.isArray(h)) importedHard = h.filter(id => typeof id === 'string' && validIds.has(id));
+        }
+      }
+
+      mastered = new Set(importedMastered);
+      hardSet = new Set(importedHard);
+      saveMastered();
+      saveHard();
+      sessionHard = new Set();
+      updatePill();
+      renderList($('kanjiSearch').value);
+      buildOrder(cardPool());
+      alert('Berhasil memulihkan progres: ' + mastered.size + ' kanji hafal & ' + hardSet.size + ' kanji sulit.');
+    } catch(err) {
+      alert('File backup tidak valid atau rusak.');
+    }
+  };
+  reader.readAsText(file);
+});
+
+/* 3. Registrasi Service Worker untuk PWA Offline-First */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
 
 /* --- init --- */
 renderChips();
